@@ -1,7 +1,7 @@
 // Local storage utilities for MemBlitz
 const STORAGE_KEY = 'memblitz_verses';
 const SAMPLE_VERSION_KEY = 'memblitz_sample_version';
-const CURRENT_SAMPLE_VERSION = 4; // Increment this when SAMPLE_VERSES changes
+const CURRENT_SAMPLE_VERSION = 5; // Increment this when SAMPLE_VERSES changes
 
 // Generate a unique ID
 function generateId() {
