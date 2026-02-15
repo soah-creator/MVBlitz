@@ -376,6 +376,7 @@ header .tagline {
   gap: 12px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .hint-container {
