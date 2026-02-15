@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MemBlitz - Bible Memory Verse Quiz</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Home View -->
+    <section id="home-view" class="view active">
+      <header>
+        <h1>MemBlitz</h1>
+        <p class="tagline">Memorize Scripture, one verse at a time</p>
+      </header>
+      <div class="home-buttons">
+        <button class="btn btn-primary" id="start-quiz-btn">Start Quiz</button>
+        <button class="btn btn-secondary" id="manage-verses-btn">Manage Verses</button>
+      </div>
+      <p class="verse-count" id="verse-count">0 verses available</p>
+    </section>
+
+    <!-- Quiz View -->
+    <section id="quiz-view" class="view">
+      <button class="back-btn" id="quiz-back-btn">&larr; Back to Home</button>
+      <div class="card flashcard" id="flashcard">
+        <p class="quiz-progress" id="quiz-progress">Verse 1 of 10</p>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progress-bar" style="width: 10%;"></div>
+        </div>
+
+        <!-- Flashcard Front -->
+        <div class="flashcard-front" id="flashcard-front">
+          <h2 class="verse-reference" id="verse-reference">John 3:16</h2>
+          <p class="flashcard-prompt">Can you recite this verse?</p>
+          <div class="hint-buttons">
+            <button class="btn btn-hint" id="show-image-hint">Show Image Hint</button>
+            <button class="btn btn-hint" id="show-text-hint">Show Text Hint</button>
+          </div>
+          <div class="hint-container hidden" id="image-hint-container">
+            <img id="hint-image" src="" alt="Verse hint image">
+          </div>
+          <div class="hint-container hidden" id="text-hint-container">
+            <p id="hint-text"></p>
+          </div>
+          <div class="quiz-actions">
+            <button class="btn btn-primary" id="reveal-answer-btn">Reveal Answer</button>
+          </div>
+        </div>
+
+        <!-- Flashcard Back -->
+        <div class="flashcard-back hidden" id="flashcard-back">
+          <h2 class="verse-reference" id="verse-reference-back">John 3:16</h2>
+          <div class="verse-text-display" id="verse-text-display">
+            <!-- Full verse text will be shown here -->
+          </div>
+          <p class="flashcard-question">Did you get it right?</p>
+          <div class="quiz-actions flashcard-rating">
+            <button class="btn btn-success" id="knew-it-btn">I Knew It</button>
+            <button class="btn btn-secondary" id="still-learning-btn">Still Learning</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quiz Complete View -->
+    <section id="quiz-complete-view" class="view">
+      <div class="card quiz-complete">
+        <h2>Quiz Complete!</h2>
+        <p class="score" id="final-score">8/10</p>
+        <p>Great job memorizing Scripture!</p>
+        <div class="quiz-actions" style="margin-top: 24px;">
+          <button class="btn btn-primary" id="restart-quiz-btn">Quiz Again</button>
+          <button class="btn btn-secondary" id="back-home-btn">Back to Home</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Manage Verses View -->
+    <section id="manage-view" class="view">
+      <button class="back-btn" id="manage-back-btn">&larr; Back to Home</button>
+      <div class="manage-header">
+        <h2>Manage Verses</h2>
+        <button class="btn btn-primary" id="add-verse-btn">+ Add New Verse</button>
+      </div>
+      <div class="verse-list" id="verse-list">
+        <!-- Verse items will be rendered here -->
+      </div>
+      <div class="empty-state hidden" id="empty-state">
+        <p>No verses yet. Add your first verse to get started!</p>
+        <button class="btn btn-primary" id="add-first-verse-btn">+ Add Verse</button>
+      </div>
+    </section>
+
+    <!-- Add/Edit Verse Form View -->
+    <section id="form-view" class="view">
+      <button class="back-btn" id="form-back-btn">&larr; Back to Verses</button>
+      <div class="card">
+        <h2 id="form-title">Add New Verse</h2>
+        <form id="verse-form">
+          <input type="hidden" id="verse-id">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="verse-book">Book</label>
+              <select id="verse-book" required>
+                <option value="">Select a book...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="verse-chapter">Chapter</label>
+              <select id="verse-chapter" required disabled>
+                <option value="">--</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="verse-verse">Verse <span id="verse-range-hint" class="hint-text"></span></label>
+              <input type="text" id="verse-verse" placeholder="e.g., 16 or 5-6" required disabled>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="verse-text">Verse Text (NKJV)</label>
+            <div class="verse-text-wrapper">
+              <textarea id="verse-text" placeholder="Select a valid reference above to auto-load verse text..." required readonly></textarea>
+              <div class="fetch-status hidden" id="fetch-status">Loading verse...</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="verse-image-url">Image Hint URL (optional)</label>
+            <input type="url" id="verse-image-url" placeholder="https://example.com/image.jpg">
+            <img class="image-preview" id="image-preview" src="" alt="Preview">
+          </div>
+          <div class="form-group">
+            <label for="verse-text-hint">Text Hint (optional)</label>
+            <textarea id="verse-text-hint" placeholder="A description or background of the verse..."></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="cancel-form-btn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Verse</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="bible-structure.js"></script>
+  <script src="storage.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
