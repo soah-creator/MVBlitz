@@ -23,9 +23,15 @@
 
     <!-- Quiz View -->
     <section id="quiz-view" class="view">
-      <button class="back-btn" id="quiz-back-btn">&larr; Back to Home</button>
+      <div class="quiz-header">
+        <button class="back-btn" id="quiz-back-btn">&larr; Back to Home</button>
+        <button class="btn btn-end-session" id="end-session-btn">End Session</button>
+      </div>
       <div class="card flashcard" id="flashcard">
-        <p class="quiz-progress" id="quiz-progress">Verse 1 of 10</p>
+        <div class="quiz-stats">
+          <p class="quiz-progress" id="quiz-progress">Verse 1 of 10</p>
+          <p class="quiz-score" id="quiz-score">0% correct</p>
+        </div>
         <div class="progress-bar-container">
           <div class="progress-bar" id="progress-bar" style="width: 10%;"></div>
         </div>
@@ -67,9 +73,10 @@
     <!-- Quiz Complete View -->
     <section id="quiz-complete-view" class="view">
       <div class="card quiz-complete">
-        <h2>Quiz Complete!</h2>
+        <h2 id="complete-title">Quiz Complete!</h2>
         <p class="score" id="final-score">8/10</p>
-        <p>Great job memorizing Scripture!</p>
+        <p class="score-percentage" id="final-percentage">80%</p>
+        <p class="score-message" id="score-message">Great job memorizing Scripture!</p>
         <div class="quiz-actions" style="margin-top: 24px;">
           <button class="btn btn-primary" id="restart-quiz-btn">Quiz Again</button>
           <button class="btn btn-secondary" id="back-home-btn">Back to Home</button>

@@ -48,7 +48,8 @@ let quizState = {
   verses: [],
   currentIndex: 0,
   score: 0,
-  answered: false
+  answered: false,
+  versesAnswered: 0
 };
 
 // DOM Elements
@@ -94,6 +95,7 @@ function setupEventListeners() {
 
   // Quiz view
   document.getElementById('quiz-back-btn').addEventListener('click', () => showView('home'));
+  document.getElementById('end-session-btn').addEventListener('click', endSession);
   document.getElementById('reveal-answer-btn').addEventListener('click', revealAnswer);
   document.getElementById('knew-it-btn').addEventListener('click', () => rateAnswer(true));
   document.getElementById('still-learning-btn').addEventListener('click', () => rateAnswer(false));
@@ -157,12 +159,14 @@ function startQuiz() {
     return;
   }
 
-  // Shuffle and take up to 10 verses
+  // Shuffle all verses
   quizState.verses = shuffleArray([...allVerses]);
   quizState.currentIndex = 0;
   quizState.score = 0;
+  quizState.versesAnswered = 0;
 
   showView('quiz');
+  updateScoreDisplay();
   displayCurrentVerse();
 }
 
@@ -228,26 +232,77 @@ function revealAnswer() {
   document.getElementById('flashcard-back').classList.remove('hidden');
 }
 
+// Update the running score display
+function updateScoreDisplay() {
+  const scoreEl = document.getElementById('quiz-score');
+  if (quizState.versesAnswered === 0) {
+    scoreEl.textContent = '0% correct';
+  } else {
+    const percentage = Math.round((quizState.score / quizState.versesAnswered) * 100);
+    scoreEl.textContent = `${percentage}% correct`;
+  }
+}
+
 // Rate whether user knew the answer
 function rateAnswer(knewIt) {
+  quizState.versesAnswered++;
+
   if (knewIt) {
     quizState.score++;
   }
+
+  updateScoreDisplay();
 
   // Move to next verse
   quizState.currentIndex++;
 
   if (quizState.currentIndex >= quizState.verses.length) {
-    showQuizComplete();
+    showQuizComplete(false);
   } else {
     displayCurrentVerse();
   }
 }
 
+// End session early
+function endSession() {
+  if (quizState.versesAnswered === 0) {
+    showView('home');
+    return;
+  }
+
+  if (confirm('End this session and see your results?')) {
+    showQuizComplete(true);
+  }
+}
+
 // Show quiz completion screen
-function showQuizComplete() {
+function showQuizComplete(endedEarly = false) {
+  const percentage = quizState.versesAnswered > 0
+    ? Math.round((quizState.score / quizState.versesAnswered) * 100)
+    : 0;
+
+  // Update title based on whether ended early
+  document.getElementById('complete-title').textContent =
+    endedEarly ? 'Session Ended' : 'Quiz Complete!';
+
+  // Update score display
   document.getElementById('final-score').textContent =
-    `${quizState.score}/${quizState.verses.length}`;
+    `${quizState.score}/${quizState.versesAnswered}`;
+  document.getElementById('final-percentage').textContent = `${percentage}%`;
+
+  // Update message based on percentage
+  let message;
+  if (percentage >= 90) {
+    message = 'Excellent! You know these verses well!';
+  } else if (percentage >= 70) {
+    message = 'Great job memorizing Scripture!';
+  } else if (percentage >= 50) {
+    message = 'Good effort! Keep practicing!';
+  } else {
+    message = 'Keep studying - you\'ll get there!';
+  }
+  document.getElementById('score-message').textContent = message;
+
   showView('quizComplete');
 }
 

@@ -266,12 +266,53 @@ header .tagline {
 }
 
 /* Quiz View */
-.quiz-progress {
-  text-align: center;
-  color: var(--text-light);
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 16px;
+}
+
+.quiz-header .back-btn {
+  margin-bottom: 0;
+}
+
+.btn-end-session {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-end-session:hover {
+  color: var(--error);
+  border-color: var(--error);
+  background-color: var(--error-light);
+}
+
+.quiz-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.quiz-progress {
+  color: var(--text-light);
   font-size: 0.9rem;
   font-weight: 500;
+  margin: 0;
+}
+
+.quiz-score {
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
 }
 
 /* Flashcard Styles */
@@ -700,6 +741,13 @@ header .tagline {
 }
 
 .quiz-complete .score {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+}
+
+.quiz-complete .score-percentage {
   font-size: 3rem;
   font-weight: 800;
   color: var(--success);
@@ -707,7 +755,7 @@ header .tagline {
   text-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
-.quiz-complete p {
+.quiz-complete .score-message {
   color: var(--text-light);
   font-size: 1.1rem;
   margin-bottom: 8px;
