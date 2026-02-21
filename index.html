@@ -133,9 +133,26 @@
             </div>
           </div>
           <div class="form-group">
-            <label for="verse-image-url">Image Hint URL (optional)</label>
-            <input type="url" id="verse-image-url" placeholder="https://example.com/image.jpg">
-            <img class="image-preview" id="image-preview" src="" alt="Preview">
+            <label>Image Hint (optional)</label>
+            <div class="image-search-section">
+              <div class="image-search-row">
+                <input type="text" id="image-keywords" placeholder="Keywords (e.g., shepherd sheep pasture)">
+                <button type="button" class="btn btn-hint btn-small" id="search-image-btn">Search Image</button>
+              </div>
+              <div class="image-picker-grid hidden" id="image-picker-grid">
+                <!-- Search results will appear here -->
+              </div>
+              <div class="image-search-status hidden" id="image-search-status"></div>
+              <div class="image-selected-preview" id="image-selected-preview">
+                <img class="image-preview" id="image-preview" src="" alt="Preview">
+                <button type="button" class="btn-clear-image hidden" id="clear-image-btn" title="Remove image">&times;</button>
+              </div>
+              <input type="hidden" id="verse-image-url">
+              <details class="manual-url-fallback">
+                <summary>Or enter image URL manually</summary>
+                <input type="url" id="verse-image-url-manual" placeholder="https://example.com/image.jpg">
+              </details>
+            </div>
           </div>
           <div class="form-group">
             <label for="verse-text-hint">Text Hint (optional)</label>

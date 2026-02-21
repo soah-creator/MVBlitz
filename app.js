@@ -4,6 +4,9 @@
 const BIBLE_API_KEY = 'wtWRu8mZevMTv5DwqjO6g'; // Get free key from https://scripture.api.bible
 const NKJV_BIBLE_ID = 'de4e12af7f28f599-02'; // NKJV Bible ID in API.Bible
 
+// Unsplash API Configuration
+const UNSPLASH_ACCESS_KEY = 'YOUR_UNSPLASH_KEY_HERE'; // Get free key from https://unsplash.com/developers
+
 // Book name to API.Bible abbreviation mapping
 const BOOK_ABBREVIATIONS = {
   "Genesis": "GEN", "Exodus": "EXO", "Leviticus": "LEV", "Numbers": "NUM",
@@ -115,7 +118,9 @@ function setupEventListeners() {
   document.getElementById('form-back-btn').addEventListener('click', () => showView('manage'));
   document.getElementById('cancel-form-btn').addEventListener('click', () => showView('manage'));
   document.getElementById('verse-form').addEventListener('submit', saveVerseForm);
-  document.getElementById('verse-image-url').addEventListener('input', previewImage);
+  document.getElementById('search-image-btn').addEventListener('click', onSearchImageClick);
+  document.getElementById('clear-image-btn').addEventListener('click', clearSelectedImage);
+  document.getElementById('verse-image-url-manual').addEventListener('input', onManualUrlInput);
 
   // Dynamic form validation
   document.getElementById('verse-book').addEventListener('change', onBookChange);
@@ -382,6 +387,13 @@ function openVerseForm(id = null) {
 
   form.reset();
   document.getElementById('image-preview').classList.remove('visible');
+  document.getElementById('image-preview').src = '';
+  document.getElementById('clear-image-btn').classList.add('hidden');
+  document.getElementById('image-picker-grid').innerHTML = '';
+  document.getElementById('image-picker-grid').classList.add('hidden');
+  document.getElementById('image-keywords').value = '';
+  document.getElementById('verse-image-url-manual').value = '';
+  hideImageSearchStatus();
   document.getElementById('verse-range-hint').textContent = '';
   hideFetchStatus();
 
@@ -413,10 +425,14 @@ function openVerseForm(id = null) {
       verseText.removeAttribute('readonly'); // Allow editing in edit mode
 
       document.getElementById('verse-image-url').value = verse.imageHintUrl || '';
+      document.getElementById('verse-image-url-manual').value = verse.imageHintUrl || '';
       document.getElementById('verse-text-hint').value = verse.textHint || '';
 
       if (verse.imageHintUrl) {
-        previewImage();
+        const preview = document.getElementById('image-preview');
+        preview.src = verse.imageHintUrl;
+        preview.classList.add('visible');
+        document.getElementById('clear-image-btn').classList.remove('hidden');
       }
     }
   } else {
@@ -426,20 +442,6 @@ function openVerseForm(id = null) {
   }
 
   showView('form');
-}
-
-// Preview image from URL
-function previewImage() {
-  const url = document.getElementById('verse-image-url').value;
-  const preview = document.getElementById('image-preview');
-
-  if (url) {
-    preview.src = url;
-    preview.classList.add('visible');
-    preview.onerror = () => preview.classList.remove('visible');
-  } else {
-    preview.classList.remove('visible');
-  }
 }
 
 // Save the verse form
@@ -628,6 +630,213 @@ async function fetchVerseText(book, chapter, verse) {
     showFetchStatus('Could not fetch verse. Please enter manually.', true);
     verseText.removeAttribute('readonly');
     setTimeout(hideFetchStatus, 3000);
+  }
+}
+
+// ===== UNSPLASH IMAGE SEARCH =====
+
+// Common stop words to filter out when extracting keywords
+const STOP_WORDS = new Set([
+  'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+  'of', 'with', 'by', 'from', 'is', 'am', 'are', 'was', 'were', 'be',
+  'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will',
+  'would', 'could', 'should', 'may', 'might', 'shall', 'can', 'not',
+  'no', 'nor', 'so', 'if', 'then', 'than', 'that', 'this', 'these',
+  'those', 'it', 'its', 'i', 'me', 'my', 'we', 'us', 'our', 'you',
+  'your', 'he', 'him', 'his', 'she', 'her', 'they', 'them', 'their',
+  'who', 'whom', 'which', 'what', 'when', 'where', 'how', 'why', 'all',
+  'each', 'every', 'both', 'any', 'few', 'more', 'most', 'some', 'such',
+  'into', 'also', 'let', 'as', 'up', 'out', 'about', 'upon', 'over',
+  'after', 'before', 'between', 'through', 'during', 'without', 'again',
+  'there', 'here', 'very', 'just', 'because', 'even', 'own', 'same',
+  'himself', 'herself', 'itself', 'themselves', 'ourselves', 'yourself',
+  'says', 'said', 'saying', 'lord', 'god', 'jesus', 'christ', 'unto'
+]);
+
+// Extract 2-4 meaningful keywords from verse text
+function extractImageKeywords(verseText) {
+  if (!verseText) return '';
+
+  const words = verseText
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !STOP_WORDS.has(w));
+
+  // Count word frequency to find most distinctive
+  const freq = {};
+  words.forEach(w => { freq[w] = (freq[w] || 0) + 1; });
+
+  // Sort by frequency (descending), take top 3-4
+  const sorted = Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .map(([word]) => word);
+
+  return sorted.slice(0, 4).join(' ');
+}
+
+// Check if Unsplash API is configured
+function isUnsplashConfigured() {
+  return UNSPLASH_ACCESS_KEY && UNSPLASH_ACCESS_KEY !== 'YOUR_UNSPLASH_KEY_HERE';
+}
+
+// Search Unsplash for images
+async function searchUnsplashImages(query) {
+  if (!isUnsplashConfigured()) {
+    return { error: 'Unsplash API key not configured. Enter your key in app.js or use a manual URL.' };
+  }
+
+  if (!query || !query.trim()) {
+    return { error: 'Please enter keywords to search for.' };
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=6&orientation=landscape`,
+      { headers: { 'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}` } }
+    );
+
+    if (response.status === 401) {
+      return { error: 'Invalid Unsplash API key. Check your key in app.js.' };
+    }
+    if (response.status === 403) {
+      return { error: 'Unsplash rate limit reached. Try again later or enter a URL manually.' };
+    }
+    if (!response.ok) {
+      return { error: 'Image search failed. Try again or enter a URL manually.' };
+    }
+
+    const data = await response.json();
+    if (!data.results || data.results.length === 0) {
+      return { error: 'No images found. Try different keywords.' };
+    }
+
+    return {
+      images: data.results.map(img => ({
+        id: img.id,
+        thumbUrl: img.urls.small,
+        regularUrl: img.urls.regular,
+        credit: img.user.name,
+        creditLink: img.user.links.html
+      }))
+    };
+  } catch (err) {
+    return { error: 'Network error. Check your connection or enter a URL manually.' };
+  }
+}
+
+// Show image search status
+function showImageSearchStatus(message, isError = false) {
+  const status = document.getElementById('image-search-status');
+  status.textContent = message;
+  status.classList.remove('hidden', 'error');
+  if (isError) status.classList.add('error');
+}
+
+function hideImageSearchStatus() {
+  document.getElementById('image-search-status').classList.add('hidden');
+}
+
+// Render image picker grid with search results
+function renderImagePicker(images) {
+  const grid = document.getElementById('image-picker-grid');
+  grid.innerHTML = '';
+  grid.classList.remove('hidden');
+
+  images.forEach(img => {
+    const item = document.createElement('div');
+    item.className = 'image-picker-item';
+    item.dataset.url = img.regularUrl;
+    item.innerHTML = `
+      <img src="${img.thumbUrl}" alt="Search result" loading="lazy">
+      <a class="unsplash-credit" href="${img.creditLink}?utm_source=memblitz&utm_medium=referral" target="_blank" rel="noopener">${img.credit}</a>
+    `;
+    item.addEventListener('click', (e) => {
+      if (e.target.tagName === 'A') return; // Let credit link work
+      selectPickerImage(img.regularUrl + '?w=400');
+      // Highlight selected
+      grid.querySelectorAll('.image-picker-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+    });
+    grid.appendChild(item);
+  });
+}
+
+// Select an image from the picker
+function selectPickerImage(url) {
+  document.getElementById('verse-image-url').value = url;
+  document.getElementById('verse-image-url-manual').value = url;
+
+  const preview = document.getElementById('image-preview');
+  preview.src = url;
+  preview.classList.add('visible');
+
+  document.getElementById('clear-image-btn').classList.remove('hidden');
+}
+
+// Clear the selected image
+function clearSelectedImage() {
+  document.getElementById('verse-image-url').value = '';
+  document.getElementById('verse-image-url-manual').value = '';
+  document.getElementById('image-preview').classList.remove('visible');
+  document.getElementById('image-preview').src = '';
+  document.getElementById('clear-image-btn').classList.add('hidden');
+  document.getElementById('image-picker-grid').querySelectorAll('.image-picker-item').forEach(
+    el => el.classList.remove('selected')
+  );
+}
+
+// Handle search image button click
+async function onSearchImageClick() {
+  const keywordsInput = document.getElementById('image-keywords');
+  let keywords = keywordsInput.value.trim();
+
+  // Auto-extract keywords from verse text if empty
+  if (!keywords) {
+    const verseText = document.getElementById('verse-text').value;
+    keywords = extractImageKeywords(verseText);
+    keywordsInput.value = keywords;
+  }
+
+  if (!keywords) {
+    showImageSearchStatus('Enter verse text first, then search for images.', true);
+    return;
+  }
+
+  const searchBtn = document.getElementById('search-image-btn');
+  searchBtn.disabled = true;
+  searchBtn.textContent = 'Searching...';
+  hideImageSearchStatus();
+
+  const result = await searchUnsplashImages(keywords);
+
+  searchBtn.disabled = false;
+  searchBtn.textContent = 'Search Image';
+
+  if (result.error) {
+    document.getElementById('image-picker-grid').classList.add('hidden');
+    showImageSearchStatus(result.error, true);
+  } else {
+    hideImageSearchStatus();
+    renderImagePicker(result.images);
+  }
+}
+
+// Handle manual URL input
+function onManualUrlInput() {
+  const url = document.getElementById('verse-image-url-manual').value.trim();
+  const preview = document.getElementById('image-preview');
+
+  document.getElementById('verse-image-url').value = url;
+
+  if (url) {
+    preview.src = url;
+    preview.classList.add('visible');
+    preview.onerror = () => preview.classList.remove('visible');
+    document.getElementById('clear-image-btn').classList.remove('hidden');
+  } else {
+    preview.classList.remove('visible');
+    document.getElementById('clear-image-btn').classList.add('hidden');
   }
 }
 
