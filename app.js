@@ -57,6 +57,7 @@ let quizState = {
 
 // DOM Elements
 const views = {
+  auth: document.getElementById('auth-view'),
   home: document.getElementById('home-view'),
   quiz: document.getElementById('quiz-view'),
   quizComplete: document.getElementById('quiz-complete-view'),
@@ -65,18 +66,19 @@ const views = {
 };
 
 // Initialize the app
-function init() {
-  // Initialize with sample verses if empty
-  initializeWithSamples();
-
-  // Populate book dropdown
+async function init() {
   populateBookDropdown();
-
-  // Set up event listeners
   setupEventListeners();
+  setupAuthEventListeners();
 
-  // Update verse count on home
-  updateVerseCount();
+  if (!isAuthenticated()) {
+    showView('auth');
+    return;
+  }
+
+  document.getElementById('current-user').textContent = getStoredUsername();
+  await updateVerseCount();
+  showView('home');
 }
 
 // Populate the book dropdown
@@ -129,21 +131,21 @@ function setupEventListeners() {
 }
 
 // Show a specific view
-function showView(viewName) {
+async function showView(viewName) {
   Object.values(views).forEach(view => view.classList.remove('active'));
   views[viewName].classList.add('active');
 
-  // Update content when showing certain views
   if (viewName === 'home') {
-    updateVerseCount();
+    await updateVerseCount();
   } else if (viewName === 'manage') {
-    renderVerseList();
+    await renderVerseList();
   }
 }
 
 // Update verse count on home screen
-function updateVerseCount() {
-  const count = getVerses().length;
+async function updateVerseCount() {
+  const verses = await getVerses();
+  const count = verses.length;
   const text = count === 1 ? '1 verse available' : `${count} verses available`;
   document.getElementById('verse-count').textContent = text;
 }
@@ -156,11 +158,11 @@ function formatReference(ref) {
 // ===== QUIZ FUNCTIONS =====
 
 // Start the quiz
-function startQuiz() {
-  const allVerses = getVerses();
+async function startQuiz() {
+  const allVerses = await getVerses();
   if (allVerses.length === 0) {
     alert('No verses available. Please add some verses first.');
-    showView('manage');
+    await showView('manage');
     return;
   }
 
@@ -324,8 +326,8 @@ function showTextHint() {
 // ===== MANAGE VERSES FUNCTIONS =====
 
 // Render the verse list
-function renderVerseList() {
-  const verses = getVerses();
+async function renderVerseList() {
+  const verses = await getVerses();
   const listEl = document.getElementById('verse-list');
   const emptyState = document.getElementById('empty-state');
 
@@ -367,18 +369,18 @@ function renderVerseList() {
 }
 
 // Confirm and delete a verse
-function confirmDeleteVerse(id) {
-  const verse = getVerseById(id);
+async function confirmDeleteVerse(id) {
+  const verse = await getVerseById(id);
   if (verse && confirm(`Delete "${formatReference(verse.reference)}"?`)) {
-    deleteVerse(id);
-    renderVerseList();
+    await deleteVerse(id);
+    await renderVerseList();
   }
 }
 
 // ===== FORM FUNCTIONS =====
 
 // Open the verse form (for add or edit)
-function openVerseForm(id = null) {
+async function openVerseForm(id = null) {
   const form = document.getElementById('verse-form');
   const title = document.getElementById('form-title');
   const chapterSelect = document.getElementById('verse-chapter');
@@ -406,7 +408,7 @@ function openVerseForm(id = null) {
 
   if (id) {
     // Edit mode
-    const verse = getVerseById(id);
+    const verse = await getVerseById(id);
     if (verse) {
       title.textContent = 'Edit Verse';
       document.getElementById('verse-id').value = verse.id;
@@ -445,7 +447,7 @@ function openVerseForm(id = null) {
 }
 
 // Save the verse form
-function saveVerseForm(e) {
+async function saveVerseForm(e) {
   e.preventDefault();
 
   const id = document.getElementById('verse-id').value || null;
@@ -461,8 +463,8 @@ function saveVerseForm(e) {
     textHint: document.getElementById('verse-text-hint').value.trim() || null
   };
 
-  saveVerse(verse);
-  showView('manage');
+  await saveVerse(verse);
+  await showView('manage');
 }
 
 // ===== DYNAMIC FORM VALIDATION =====
@@ -838,6 +840,95 @@ function onManualUrlInput() {
     preview.classList.remove('visible');
     document.getElementById('clear-image-btn').classList.add('hidden');
   }
+}
+
+// ===== AUTH UI FUNCTIONS =====
+
+function setupAuthEventListeners() {
+  // Tab switching
+  document.getElementById('tab-login').addEventListener('click', () => switchAuthTab('login'));
+  document.getElementById('tab-register').addEventListener('click', () => switchAuthTab('register'));
+
+  // Form submissions
+  document.getElementById('login-form').addEventListener('submit', onLoginSubmit);
+  document.getElementById('register-form').addEventListener('submit', onRegisterSubmit);
+
+  // Logout
+  document.getElementById('logout-btn').addEventListener('click', onLogout);
+}
+
+function switchAuthTab(tab) {
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegister = document.getElementById('tab-register');
+
+  if (tab === 'login') {
+    loginForm.classList.remove('hidden');
+    registerForm.classList.add('hidden');
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+  } else {
+    loginForm.classList.add('hidden');
+    registerForm.classList.remove('hidden');
+    tabLogin.classList.remove('active');
+    tabRegister.classList.add('active');
+  }
+}
+
+async function onLoginSubmit(e) {
+  e.preventDefault();
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errorEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-submit-btn');
+
+  errorEl.classList.add('hidden');
+  btn.disabled = true;
+  btn.textContent = 'Logging in...';
+
+  try {
+    await login(username, password);
+    document.getElementById('current-user').textContent = getStoredUsername();
+    await updateVerseCount();
+    showView('home');
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Login';
+  }
+}
+
+async function onRegisterSubmit(e) {
+  e.preventDefault();
+  const username = document.getElementById('register-username').value.trim();
+  const password = document.getElementById('register-password').value;
+  const errorEl = document.getElementById('register-error');
+  const btn = document.getElementById('register-submit-btn');
+
+  errorEl.classList.add('hidden');
+  btn.disabled = true;
+  btn.textContent = 'Creating account...';
+
+  try {
+    await register(username, password);
+    document.getElementById('current-user').textContent = getStoredUsername();
+    await updateVerseCount();
+    showView('home');
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create Account';
+  }
+}
+
+function onLogout() {
+  logout();
+  showView('auth');
 }
 
 // Initialize the app when DOM is ready

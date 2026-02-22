@@ -1,84 +1,114 @@
-// Local storage utilities for MemBlitz
-const STORAGE_KEY = 'memblitz_verses';
-const SAMPLE_VERSION_KEY = 'memblitz_sample_version';
-const CURRENT_SAMPLE_VERSION = 6; // Increment this when SAMPLE_VERSES changes
+// API-backed storage for MemBlitz
+// Replaces the previous localStorage implementation.
 
-// Generate a unique ID
-function generateId() {
-  return 'verse-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+const TOKEN_KEY = 'mb_token';
+const USERNAME_KEY = 'mb_username';
+
+// ===== Auth helpers =====
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY);
 }
 
-// Get all verses from storage
-function getVerses() {
-  const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
+function isAuthenticated() {
+  return !!getToken();
 }
 
-// Save all verses to storage
-function saveAllVerses(verses) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(verses));
+function setSession(token, username) {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USERNAME_KEY, username);
 }
 
-// Add or update a verse
-function saveVerse(verse) {
-  const verses = getVerses();
+function clearSession() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USERNAME_KEY);
+}
 
+function getStoredUsername() {
+  return localStorage.getItem(USERNAME_KEY) || '';
+}
+
+// ===== API fetch helper =====
+
+async function apiFetch(method, path, body = null) {
+  const token = getToken();
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    }
+  };
+  if (body !== null) opts.body = JSON.stringify(body);
+
+  const res = await fetch(path, opts);
+
+  if (res.status === 401) {
+    clearSession();
+    window.location.reload();
+    throw new Error('Session expired. Please log in again.');
+  }
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Request failed (${res.status})`);
+  }
+
+  return res.json();
+}
+
+// ===== Auth API =====
+
+async function login(username, password) {
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Login failed');
+  setSession(data.token, data.username);
+  return data;
+}
+
+async function register(username, password) {
+  const res = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Registration failed');
+  setSession(data.token, data.username);
+  return data;
+}
+
+function logout() {
+  clearSession();
+}
+
+// ===== Verse CRUD API =====
+
+async function getVerses() {
+  return apiFetch('GET', '/api/verses');
+}
+
+async function saveVerse(verse) {
   if (verse.id) {
-    // Update existing verse
-    const index = verses.findIndex(v => v.id === verse.id);
-    if (index !== -1) {
-      verses[index] = verse;
-    } else {
-      verses.push(verse);
-    }
-  } else {
-    // Add new verse
-    verse.id = generateId();
-    verses.push(verse);
+    return apiFetch('PUT', `/api/verses/${verse.id}`, verse);
   }
-
-  saveAllVerses(verses);
-  return verse;
+  return apiFetch('POST', '/api/verses', verse);
 }
 
-// Delete a verse by ID
-function deleteVerse(id) {
-  const verses = getVerses();
-  const filtered = verses.filter(v => v.id !== id);
-  saveAllVerses(filtered);
+async function deleteVerse(id) {
+  return apiFetch('DELETE', `/api/verses/${id}`);
 }
 
-// Get a single verse by ID
-function getVerseById(id) {
-  const verses = getVerses();
-  return verses.find(v => v.id === id);
+async function getVerseById(id) {
+  const verses = await getVerses();
+  return verses.find(v => v.id === id) || null;
 }
 
-// Initialize with sample verses if storage is empty or sample version changed
-function initializeWithSamples() {
-  if (typeof SAMPLE_VERSES === 'undefined') {
-    return false;
-  }
-
-  const verses = getVerses();
-  const storedVersion = localStorage.getItem(SAMPLE_VERSION_KEY);
-  const currentVersion = CURRENT_SAMPLE_VERSION.toString();
-
-  // Initialize if empty or if sample data version has changed
-  if (verses.length === 0 || storedVersion !== currentVersion) {
-    // Only auto-replace if user hasn't added custom verses
-    const hasOnlySampleVerses = verses.every(v => v.id && v.id.startsWith('sample-'));
-
-    if (verses.length === 0 || hasOnlySampleVerses) {
-      saveAllVerses(SAMPLE_VERSES);
-      localStorage.setItem(SAMPLE_VERSION_KEY, currentVersion);
-      return true;
-    }
-  }
-  return false;
-}
-
-// Clear all verses (for testing/reset)
-function clearAllVerses() {
-  localStorage.removeItem(STORAGE_KEY);
-}
+// initializeWithSamples is now handled server-side on register.
+// Keeping a no-op stub so any leftover references don't crash.
+function initializeWithSamples() {}

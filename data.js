@@ -351,3 +351,6 @@ const SAMPLE_VERSES = [
     textHint: "John's vision of the new heaven and earth where God removes all suffering forever."
   }
 ];
+
+// Allow Node.js to require this file for server-side seeding
+if (typeof module !== 'undefined') module.exports = SAMPLE_VERSES;
