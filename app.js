@@ -52,6 +52,7 @@ let quizState = {
   currentIndex: 0,
   score: 0,
   answered: false,
+  hintUsed: false,
   versesAnswered: 0,
   lastMode: 'random',
   // Multiplayer
@@ -707,6 +708,7 @@ function displayCurrentVerse() {
   }
 
   quizState.answered = false;
+  quizState.hintUsed = false;
 
   // Update progress
   document.getElementById('quiz-progress').textContent = progressText;
@@ -782,7 +784,7 @@ function rateAnswer(knewIt) {
     rateAnswerMultiplayer(knewIt);
   } else {
     quizState.versesAnswered++;
-    if (knewIt) quizState.score++;
+    if (knewIt) quizState.score += quizState.hintUsed ? 0.5 : 1;
     updateScoreDisplay();
 
     quizState.currentIndex++;
@@ -798,7 +800,7 @@ function rateAnswer(knewIt) {
 function rateAnswerMultiplayer(knewIt) {
   const player = quizState.players[quizState.currentPlayerIndex];
   player.versesAnswered++;
-  if (knewIt) player.score++;
+  if (knewIt) player.score += quizState.hintUsed ? 0.5 : 1;
 
   player.currentVerseIndex++;
 
@@ -901,11 +903,13 @@ function showMultiplayerScoreboard(endedEarly = false) {
 // Show image hint
 function showImageHint() {
   document.getElementById('image-hint-container').classList.remove('hidden');
+  quizState.hintUsed = true;
 }
 
 // Show text hint
 function showTextHint() {
   document.getElementById('text-hint-container').classList.remove('hidden');
+  quizState.hintUsed = true;
 }
 
 // ===== MANAGE VERSES FUNCTIONS =====
