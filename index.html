@@ -48,11 +48,24 @@
         <h1>MemBlitz</h1>
         <p class="tagline">Memorize Scripture, one verse at a time</p>
       </header>
+      <div class="quiz-mode-selector">
+        <h2 class="quiz-mode-heading">Start Quiz</h2>
+        <div class="quiz-mode-buttons">
+          <button class="quiz-mode-card" id="quiz-favorites-btn">
+            <span class="quiz-mode-icon">&#9733;</span>
+            <span class="quiz-mode-label">Favorites</span>
+            <span class="quiz-mode-count" id="favorites-count">0 verses</span>
+          </button>
+          <button class="quiz-mode-card" id="quiz-random-btn">
+            <span class="quiz-mode-icon">&#9776;</span>
+            <span class="quiz-mode-label">Random</span>
+            <span class="quiz-mode-count" id="random-count">0 verses</span>
+          </button>
+        </div>
+      </div>
       <div class="home-buttons">
-        <button class="btn btn-primary" id="start-quiz-btn">Start Quiz</button>
         <button class="btn btn-secondary" id="manage-verses-btn">Manage Verses</button>
       </div>
-      <p class="verse-count" id="verse-count">0 verses available</p>
     </section>
 
     <!-- Quiz View -->
@@ -191,6 +204,12 @@
           <div class="form-group">
             <label for="verse-text-hint">Text Hint (optional)</label>
             <textarea id="verse-text-hint" placeholder="A description or background of the verse..."></textarea>
+          </div>
+          <div class="form-group form-group-checkbox">
+            <label class="checkbox-label">
+              <input type="checkbox" id="verse-favorite">
+              <span class="checkbox-star">&#9733;</span> Mark as Favorite
+            </label>
           </div>
           <div class="form-actions">
             <button type="button" class="btn btn-secondary" id="cancel-form-btn">Cancel</button>

@@ -50,6 +50,23 @@ async function getVerseById(id) {
   return null;
 }
 
+// Toggle the favorite status of a verse
+async function toggleFavorite(id) {
+  const doc = await versesCollection().doc(id).get();
+  if (doc.exists) {
+    const current = doc.data().favorite || false;
+    await versesCollection().doc(id).update({ favorite: !current });
+    return !current;
+  }
+  return false;
+}
+
+// Get all favorite verses
+async function getFavoriteVerses() {
+  const snapshot = await versesCollection().where('favorite', '==', true).get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
 // Initialize with sample verses if user has no verses yet
 async function initializeWithSamples() {
   if (typeof SAMPLE_VERSES === 'undefined') {

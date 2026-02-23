@@ -52,7 +52,8 @@ let quizState = {
   currentIndex: 0,
   score: 0,
   answered: false,
-  versesAnswered: 0
+  versesAnswered: 0,
+  lastMode: 'random'
 };
 
 // Auth state
@@ -236,8 +237,9 @@ function populateBookDropdown() {
 
 // Set up all event listeners
 function setupEventListeners() {
-  // Home view
-  document.getElementById('start-quiz-btn').addEventListener('click', startQuiz);
+  // Home view — quiz mode buttons
+  document.getElementById('quiz-favorites-btn').addEventListener('click', () => startQuiz('favorites'));
+  document.getElementById('quiz-random-btn').addEventListener('click', () => startQuiz('random'));
   document.getElementById('manage-verses-btn').addEventListener('click', () => showView('manage'));
 
   // Quiz view
@@ -250,7 +252,7 @@ function setupEventListeners() {
   document.getElementById('show-text-hint').addEventListener('click', showTextHint);
 
   // Quiz complete view
-  document.getElementById('restart-quiz-btn').addEventListener('click', startQuiz);
+  document.getElementById('restart-quiz-btn').addEventListener('click', () => startQuiz(quizState.lastMode || 'random'));
   document.getElementById('back-home-btn').addEventListener('click', () => showView('home'));
 
   // Manage view
@@ -317,12 +319,26 @@ function showView(viewName) {
   }
 }
 
-// Update verse count on home screen
+// Update verse counts on home screen
 async function updateVerseCount() {
-  const verses = await getVerses();
-  const count = verses.length;
-  const text = count === 1 ? '1 verse available' : `${count} verses available`;
-  document.getElementById('verse-count').textContent = text;
+  const allVerses = await getVerses();
+  const favoriteVerses = await getFavoriteVerses();
+
+  const totalCount = allVerses.length;
+  const favCount = favoriteVerses.length;
+
+  document.getElementById('random-count').textContent =
+    totalCount === 1 ? '1 verse' : `${totalCount} verses`;
+  document.getElementById('favorites-count').textContent =
+    favCount === 1 ? '1 verse' : `${favCount} verses`;
+
+  // Disable favorites button when 0 favorites
+  const favBtn = document.getElementById('quiz-favorites-btn');
+  if (favCount === 0) {
+    favBtn.classList.add('disabled');
+  } else {
+    favBtn.classList.remove('disabled');
+  }
 }
 
 // Format verse reference for display
@@ -333,19 +349,30 @@ function formatReference(ref) {
 // ===== QUIZ FUNCTIONS =====
 
 // Start the quiz
-async function startQuiz() {
-  const allVerses = await getVerses();
-  if (allVerses.length === 0) {
-    alert('No verses available. Please add some verses first.');
-    showView('manage');
-    return;
+async function startQuiz(mode = 'random') {
+  let verses;
+
+  if (mode === 'favorites') {
+    verses = await getFavoriteVerses();
+    if (verses.length === 0) {
+      alert('No favorite verses yet. Star some verses in Manage Verses first!');
+      return;
+    }
+  } else {
+    verses = await getVerses();
+    if (verses.length === 0) {
+      alert('No verses available. Please add some verses first.');
+      showView('manage');
+      return;
+    }
   }
 
-  // Shuffle all verses
-  quizState.verses = shuffleArray([...allVerses]);
+  // Shuffle verses
+  quizState.verses = shuffleArray([...verses]);
   quizState.currentIndex = 0;
   quizState.score = 0;
   quizState.versesAnswered = 0;
+  quizState.lastMode = mode;
 
   showView('quiz');
   updateScoreDisplay();
@@ -518,9 +545,11 @@ async function renderVerseList() {
   listEl.classList.remove('hidden');
 
   verses.forEach(verse => {
+    const isFav = verse.favorite || false;
     const item = document.createElement('div');
     item.className = 'verse-item';
     item.innerHTML = `
+      <button class="btn-favorite ${isFav ? 'active' : ''}" data-id="${verse.id}" title="${isFav ? 'Remove from favorites' : 'Add to favorites'}">&#9733;</button>
       <div class="verse-item-info">
         <div class="verse-item-reference">${formatReference(verse.reference)}</div>
         <div class="verse-item-preview">${verse.text}</div>
@@ -533,7 +562,11 @@ async function renderVerseList() {
     listEl.appendChild(item);
   });
 
-  // Add event listeners for edit/delete buttons
+  // Add event listeners for favorite/edit/delete buttons
+  listEl.querySelectorAll('.btn-favorite').forEach(btn => {
+    btn.addEventListener('click', () => toggleFavoriteVerse(btn.dataset.id));
+  });
+
   listEl.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', () => openVerseForm(btn.dataset.id));
   });
@@ -550,6 +583,12 @@ async function confirmDeleteVerse(id) {
     await deleteVerse(id);
     await renderVerseList();
   }
+}
+
+// Toggle favorite on a verse
+async function toggleFavoriteVerse(id) {
+  await toggleFavorite(id);
+  await renderVerseList();
 }
 
 // ===== FORM FUNCTIONS =====
@@ -605,6 +644,8 @@ async function openVerseForm(id = null) {
       document.getElementById('verse-image-url-manual').value = verse.imageHintUrl || '';
       document.getElementById('verse-text-hint').value = verse.textHint || '';
 
+      document.getElementById('verse-favorite').checked = verse.favorite || false;
+
       if (verse.imageHintUrl) {
         const preview = document.getElementById('image-preview');
         preview.src = verse.imageHintUrl;
@@ -635,7 +676,8 @@ async function saveVerseForm(e) {
     },
     text: document.getElementById('verse-text').value.trim(),
     imageHintUrl: document.getElementById('verse-image-url').value.trim() || null,
-    textHint: document.getElementById('verse-text-hint').value.trim() || null
+    textHint: document.getElementById('verse-text-hint').value.trim() || null,
+    favorite: document.getElementById('verse-favorite').checked
   };
 
   await saveVerse(verse);
