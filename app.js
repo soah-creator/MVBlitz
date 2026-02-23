@@ -90,7 +90,11 @@ auth.onAuthStateChanged(async (user) => {
     // User is signed in
     setCurrentUser(user.uid);
     displayUserInfo(user);
-    await init();
+    try {
+      await init();
+    } catch (err) {
+      console.error('Init error:', err);
+    }
     showView('home');
   } else {
     // User is signed out
@@ -321,8 +325,14 @@ function showView(viewName) {
 
 // Update verse counts on home screen
 async function updateVerseCount() {
-  const allVerses = await getVerses();
-  const favoriteVerses = await getFavoriteVerses();
+  let allVerses = [];
+  let favoriteVerses = [];
+  try {
+    allVerses = await getVerses();
+    favoriteVerses = await getFavoriteVerses();
+  } catch (err) {
+    console.error('Error loading verse counts:', err);
+  }
 
   const totalCount = allVerses.length;
   const favCount = favoriteVerses.length;
