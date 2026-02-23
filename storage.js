@@ -95,6 +95,56 @@ async function resetToSamples() {
   return true;
 }
 
+// ===== QUIZ HISTORY =====
+
+// Get the user's quiz history collection reference
+function quizHistoryCollection() {
+  return db.collection('users').doc(currentUserId).collection('quizHistory');
+}
+
+// Save a quiz session
+async function saveQuizSession(session) {
+  session.date = new Date().toISOString();
+  await quizHistoryCollection().add(session);
+}
+
+// Get recent quiz sessions
+async function getQuizHistory(limit = 10) {
+  const snapshot = await quizHistoryCollection()
+    .orderBy('date', 'desc')
+    .limit(limit)
+    .get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+// Get aggregated quiz stats
+async function getQuizStats() {
+  const snapshot = await quizHistoryCollection().get();
+  const sessions = snapshot.docs.map(doc => doc.data());
+
+  let totalQuizzes = sessions.length;
+  let totalVerses = 0;
+  let totalCorrect = 0;
+  let totalAnswered = 0;
+  let bestScore = 0;
+
+  sessions.forEach(s => {
+    if (s.players) {
+      s.players.forEach(p => {
+        totalVerses += p.versesAnswered || 0;
+        totalCorrect += p.score || 0;
+        totalAnswered += p.versesAnswered || 0;
+        const pct = p.versesAnswered > 0 ? Math.round((p.score / p.versesAnswered) * 100) : 0;
+        if (pct > bestScore) bestScore = pct;
+      });
+    }
+  });
+
+  const avgAccuracy = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+
+  return { totalQuizzes, totalVerses, avgAccuracy, bestScore };
+}
+
 // Initialize with sample verses if user has no verses yet
 async function initializeWithSamples() {
   if (typeof SAMPLE_VERSES === 'undefined') {

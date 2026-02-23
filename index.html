@@ -43,7 +43,10 @@
       <header>
         <div class="header-top-bar">
           <div class="user-info" id="user-info"></div>
-          <button class="btn-logout" id="logout-btn">Log Out</button>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="btn-theme-toggle" id="theme-toggle-btn" title="Toggle dark mode">&#9790;</button>
+            <button class="btn-logout" id="logout-btn">Log Out</button>
+          </div>
         </div>
         <h1>MemBlitz</h1>
         <p class="tagline">Memorize Scripture, one verse at a time</p>
@@ -65,6 +68,7 @@
       </div>
       <div class="home-buttons">
         <button class="btn btn-secondary" id="manage-verses-btn">Manage Verses</button>
+        <button class="btn btn-secondary" id="stats-btn">Stats</button>
       </div>
     </section>
 
@@ -107,6 +111,20 @@
           <input type="range" id="quiz-verse-count" min="1" max="50" value="5">
           <span class="quiz-verse-count-display" id="quiz-verse-count-display">5 verses</span>
         </div>
+        <!-- Timer Option -->
+        <div class="timer-setup-section">
+          <label class="checkbox-label timer-toggle-label">
+            <input type="checkbox" id="timer-toggle">
+            <span>Enable Timer</span>
+          </label>
+          <div class="timer-duration-picker hidden" id="timer-duration-picker">
+            <button class="btn-count-preset" data-seconds="15">15s</button>
+            <button class="btn-count-preset active" data-seconds="30">30s</button>
+            <button class="btn-count-preset" data-seconds="60">60s</button>
+            <button class="btn-count-preset" data-seconds="90">90s</button>
+          </div>
+        </div>
+
         <p class="quiz-setup-note hidden" id="quiz-setup-note"></p>
         <button class="btn btn-primary quiz-start-btn" id="quiz-start-btn">Start Quiz</button>
       </div>
@@ -126,9 +144,13 @@
     <section id="quiz-view" class="view">
       <div class="quiz-header">
         <button class="back-btn" id="quiz-back-btn">&larr; Back to Home</button>
-        <button class="btn btn-end-session" id="end-session-btn">End Session</button>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button class="btn-sound-toggle" id="sound-toggle-btn" title="Mute sounds">&#128264;</button>
+          <button class="btn btn-end-session" id="end-session-btn">End Session</button>
+        </div>
       </div>
       <div class="card flashcard" id="flashcard">
+        <div class="quiz-timer hidden" id="quiz-timer">30</div>
         <div class="quiz-stats">
           <p class="quiz-progress" id="quiz-progress">Verse 1 of 10</p>
           <p class="quiz-score" id="quiz-score">0% correct</p>
@@ -154,6 +176,7 @@
           <div class="quiz-actions">
             <button class="btn btn-primary" id="reveal-answer-btn">Reveal Answer</button>
           </div>
+          <p class="swipe-hint">Swipe up to reveal</p>
         </div>
 
         <!-- Flashcard Back -->
@@ -167,6 +190,7 @@
             <button class="btn btn-success" id="knew-it-btn">I Knew It</button>
             <button class="btn btn-secondary" id="still-learning-btn">Still Learning</button>
           </div>
+          <p class="swipe-hint">Swipe right = knew it, left = still learning</p>
         </div>
       </div>
     </section>
@@ -180,8 +204,37 @@
         </div>
         <div class="quiz-actions" style="margin-top: 24px;">
           <button class="btn btn-primary" id="restart-quiz-btn">Play Again</button>
+          <button class="btn btn-share" id="share-results-btn">Share Results</button>
           <button class="btn btn-secondary" id="back-home-btn">Back to Home</button>
         </div>
+      </div>
+    </section>
+
+    <!-- Stats View -->
+    <section id="stats-view" class="view">
+      <button class="back-btn" id="stats-back-btn">&larr; Back to Home</button>
+      <h2 class="stats-title">Your Stats</h2>
+      <div class="stats-cards" id="stats-cards">
+        <div class="stat-card">
+          <span class="stat-value" id="stat-total-quizzes">0</span>
+          <span class="stat-label">Total Quizzes</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="stat-total-verses">0</span>
+          <span class="stat-label">Verses Practiced</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="stat-avg-accuracy">0%</span>
+          <span class="stat-label">Avg Accuracy</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="stat-best-score">0%</span>
+          <span class="stat-label">Best Score</span>
+        </div>
+      </div>
+      <h3 class="stats-section-title">Recent Sessions</h3>
+      <div class="stats-history" id="stats-history">
+        <p class="stats-empty">No quiz sessions yet. Complete a quiz to see your history!</p>
       </div>
     </section>
 

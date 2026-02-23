@@ -46,6 +46,122 @@ const BIBLE_BOOKS = [
   "1 John", "2 John", "3 John", "Jude", "Revelation"
 ];
 
+// ===== DARK MODE =====
+function initTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+  updateThemeIcon();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) {
+      document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+      updateThemeIcon();
+    }
+  });
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.innerHTML = isDark ? '&#9788;' : '&#9790;';
+    btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+  }
+}
+
+// Initialize theme immediately
+initTheme();
+
+// ===== SOUND & HAPTIC FEEDBACK =====
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('soundEnabled') !== 'false'; // on by default
+
+function getAudioContext() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(frequency, duration, type = 'sine', gain = 0.3) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    if (ctx.state === 'suspended') ctx.resume();
+    const osc = ctx.createOscillator();
+    const vol = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = frequency;
+    vol.gain.value = gain;
+    vol.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+    osc.connect(vol);
+    vol.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch (e) { /* silent fail */ }
+}
+
+function playCorrectSound() {
+  if (!soundEnabled) return;
+  playTone(523, 0.15); // C5
+  setTimeout(() => playTone(659, 0.15), 100); // E5
+  setTimeout(() => playTone(784, 0.2), 200); // G5
+}
+
+function playIncorrectSound() {
+  if (!soundEnabled) return;
+  playTone(330, 0.15, 'triangle'); // E4
+  setTimeout(() => playTone(277, 0.25, 'triangle'), 120); // C#4
+}
+
+function playTimerWarningSound() {
+  if (!soundEnabled) return;
+  playTone(880, 0.1, 'square', 0.15);
+}
+
+function playQuizCompleteSound() {
+  if (!soundEnabled) return;
+  playTone(523, 0.15); // C5
+  setTimeout(() => playTone(659, 0.12), 120);
+  setTimeout(() => playTone(784, 0.12), 240);
+  setTimeout(() => playTone(1047, 0.3), 360); // C6
+}
+
+function vibrateCorrect() {
+  if (navigator.vibrate) navigator.vibrate(50);
+}
+
+function vibrateIncorrect() {
+  if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+}
+
+function vibrateTimerWarning() {
+  if (navigator.vibrate) navigator.vibrate([30, 30, 30, 30, 30]);
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('soundEnabled', soundEnabled);
+  updateSoundIcon();
+}
+
+function updateSoundIcon() {
+  const btn = document.getElementById('sound-toggle-btn');
+  if (btn) {
+    btn.innerHTML = soundEnabled ? '&#128264;' : '&#128263;';
+    btn.title = soundEnabled ? 'Mute sounds' : 'Unmute sounds';
+  }
+}
+
 // Quiz state
 let quizState = {
   verses: [],
@@ -55,6 +171,11 @@ let quizState = {
   hintUsed: false,
   versesAnswered: 0,
   lastMode: 'random',
+  // Timer
+  timerEnabled: false,
+  timerSeconds: 30,
+  timerRemaining: 0,
+  timerInterval: null,
   // Multiplayer
   isMultiplayer: false,
   players: [],          // { name, verses[], currentVerseIndex, score, versesAnswered }
@@ -74,6 +195,7 @@ const views = {
   handoff: document.getElementById('handoff-view'),
   quiz: document.getElementById('quiz-view'),
   quizComplete: document.getElementById('quiz-complete-view'),
+  stats: document.getElementById('stats-view'),
   manage: document.getElementById('manage-view'),
   form: document.getElementById('form-view')
 };
@@ -250,10 +372,22 @@ function populateBookDropdown() {
 
 // Set up all event listeners
 function setupEventListeners() {
+  // Theme toggle
+  document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+
+  // Sound toggle
+  document.getElementById('sound-toggle-btn').addEventListener('click', toggleSound);
+  updateSoundIcon();
+
+  // Swipe gestures
+  setupSwipeGestures();
+
   // Home view — quiz mode buttons
   document.getElementById('quiz-favorites-btn').addEventListener('click', () => openQuizSetup('favorites'));
   document.getElementById('quiz-random-btn').addEventListener('click', () => openQuizSetup('random'));
   document.getElementById('manage-verses-btn').addEventListener('click', () => showView('manage'));
+  document.getElementById('stats-btn').addEventListener('click', () => showStatsView());
+  document.getElementById('stats-back-btn').addEventListener('click', () => showView('home'));
 
   // Quiz setup view
   document.getElementById('quiz-setup-back-btn').addEventListener('click', () => showView('home'));
@@ -264,6 +398,19 @@ function setupEventListeners() {
   });
   document.querySelectorAll('.btn-player-preset').forEach(btn => {
     btn.addEventListener('click', onPlayerPresetClick);
+  });
+
+  // Timer setup
+  document.getElementById('timer-toggle').addEventListener('change', (e) => {
+    quizSetupState.timerEnabled = e.target.checked;
+    document.getElementById('timer-duration-picker').classList.toggle('hidden', !e.target.checked);
+  });
+  document.querySelectorAll('#timer-duration-picker .btn-count-preset').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      quizSetupState.timerSeconds = parseInt(e.currentTarget.dataset.seconds);
+      document.querySelectorAll('#timer-duration-picker .btn-count-preset').forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+    });
   });
 
   // Handoff view
@@ -280,6 +427,7 @@ function setupEventListeners() {
 
   // Quiz complete view
   document.getElementById('restart-quiz-btn').addEventListener('click', () => startQuiz(quizState.lastMode || 'random'));
+  document.getElementById('share-results-btn').addEventListener('click', shareResults);
   document.getElementById('back-home-btn').addEventListener('click', () => showView('home'));
 
   // Manage view
@@ -390,7 +538,9 @@ let quizSetupState = {
   availableVerses: [],
   selectedCount: 5,
   playerCount: 1,
-  playerNames: []
+  playerNames: [],
+  timerEnabled: false,
+  timerSeconds: 30
 };
 
 // Open the quiz setup screen
@@ -424,6 +574,15 @@ async function openQuizSetup(mode) {
   document.getElementById('verse-count-label').textContent = 'How many verses?';
   document.getElementById('quiz-setup-note').classList.add('hidden');
   document.getElementById('quiz-start-btn').disabled = false;
+
+  // Reset timer setup
+  quizSetupState.timerEnabled = false;
+  quizSetupState.timerSeconds = 30;
+  document.getElementById('timer-toggle').checked = false;
+  document.getElementById('timer-duration-picker').classList.add('hidden');
+  document.querySelectorAll('#timer-duration-picker .btn-count-preset').forEach(b => b.classList.remove('active'));
+  const defaultTimerBtn = document.querySelector('#timer-duration-picker .btn-count-preset[data-seconds="30"]');
+  if (defaultTimerBtn) defaultTimerBtn.classList.add('active');
 
   // Update setup UI
   const total = verses.length;
@@ -615,6 +774,8 @@ function startQuizFromSetup() {
   const playerCount = quizSetupState.playerCount;
 
   quizState.lastMode = quizSetupState.mode;
+  quizState.timerEnabled = quizSetupState.timerEnabled;
+  quizState.timerSeconds = quizSetupState.timerSeconds;
 
   if (playerCount <= 1) {
     // Single player — existing flow
@@ -748,10 +909,18 @@ function displayCurrentVerse() {
   // Show front, hide back
   document.getElementById('flashcard-front').classList.remove('hidden');
   document.getElementById('flashcard-back').classList.add('hidden');
+
+  // Start timer if enabled
+  if (quizState.timerEnabled) {
+    startTimer();
+  } else {
+    document.getElementById('quiz-timer').classList.add('hidden');
+  }
 }
 
 // Reveal the answer (flip flashcard)
 function revealAnswer() {
+  stopTimer();
   document.getElementById('flashcard-front').classList.add('hidden');
   document.getElementById('flashcard-back').classList.remove('hidden');
 }
@@ -780,6 +949,10 @@ function updateScoreDisplay() {
 
 // Rate whether user knew the answer
 function rateAnswer(knewIt) {
+  // Sound & haptic feedback
+  if (knewIt) { playCorrectSound(); vibrateCorrect(); }
+  else { playIncorrectSound(); vibrateIncorrect(); }
+
   if (quizState.isMultiplayer) {
     rateAnswerMultiplayer(knewIt);
   } else {
@@ -846,6 +1019,8 @@ function endSession() {
 
 // Show quiz completion screen (unified for single & multiplayer)
 function showQuizComplete(endedEarly = false) {
+  playQuizCompleteSound();
+
   document.getElementById('complete-title').textContent =
     endedEarly ? 'Session Ended' : 'Quiz Complete!';
 
@@ -892,12 +1067,85 @@ function showQuizComplete(endedEarly = false) {
     scoreboard.appendChild(row);
   });
 
+  // Save quiz session to history
+  try {
+    const sessionPlayers = sorted.map(p => ({
+      name: p.name,
+      score: p.score,
+      versesAnswered: p.versesAnswered
+    }));
+    saveQuizSession({
+      mode: quizState.lastMode,
+      playerCount: quizState.isMultiplayer ? quizState.players.length : 1,
+      players: sessionPlayers,
+      timerEnabled: quizState.timerEnabled,
+      timerSeconds: quizState.timerSeconds,
+      endedEarly
+    });
+  } catch (e) {
+    console.error('Error saving quiz session:', e);
+  }
+
   showView('quizComplete');
 }
 
 // Alias for multiplayer completion
 function showMultiplayerScoreboard(endedEarly = false) {
   showQuizComplete(endedEarly);
+}
+
+// ===== STATS VIEW =====
+async function showStatsView() {
+  showView('stats');
+
+  try {
+    const stats = await getQuizStats();
+    document.getElementById('stat-total-quizzes').textContent = stats.totalQuizzes;
+    document.getElementById('stat-total-verses').textContent = stats.totalVerses;
+    document.getElementById('stat-avg-accuracy').textContent = stats.avgAccuracy + '%';
+    document.getElementById('stat-best-score').textContent = stats.bestScore + '%';
+
+    const history = await getQuizHistory(10);
+    const historyEl = document.getElementById('stats-history');
+
+    if (history.length === 0) {
+      historyEl.innerHTML = '<p class="stats-empty">No quiz sessions yet. Complete a quiz to see your history!</p>';
+      return;
+    }
+
+    historyEl.innerHTML = '';
+    history.forEach(session => {
+      const date = new Date(session.date);
+      const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const mode = session.mode === 'favorites' ? 'Favorites' : 'Random';
+      const playerCount = session.playerCount || 1;
+      const modeLabel = playerCount > 1 ? `${mode} (${playerCount}p)` : mode;
+
+      let scoreText = '';
+      if (session.players && session.players.length > 0) {
+        const p = session.players[0];
+        const pct = p.versesAnswered > 0 ? Math.round((p.score / p.versesAnswered) * 100) : 0;
+        scoreText = `${p.score}/${p.versesAnswered} (${pct}%)`;
+        if (playerCount > 1) {
+          scoreText = session.players.map(pl => {
+            const pc = pl.versesAnswered > 0 ? Math.round((pl.score / pl.versesAnswered) * 100) : 0;
+            return `${pl.name}: ${pc}%`;
+          }).join(', ');
+        }
+      }
+
+      const row = document.createElement('div');
+      row.className = 'stats-session-row';
+      row.innerHTML = `
+        <span class="stats-session-date">${dateStr}</span>
+        <span class="stats-session-mode">${modeLabel}</span>
+        <span class="stats-session-score">${scoreText}</span>
+      `;
+      historyEl.appendChild(row);
+    });
+  } catch (err) {
+    console.error('Error loading stats:', err);
+  }
 }
 
 // Show image hint
@@ -1436,6 +1684,186 @@ async function onSearchImageClick() {
     hideImageSearchStatus();
     renderImagePicker(result.images);
   }
+}
+
+// ===== SHARE RESULTS =====
+function generateShareText() {
+  let players;
+  if (quizState.isMultiplayer) {
+    players = quizState.players;
+  } else {
+    players = [{
+      name: 'I',
+      score: quizState.score,
+      versesAnswered: quizState.versesAnswered
+    }];
+  }
+
+  const sorted = [...players].sort((a, b) => {
+    const pctA = a.versesAnswered > 0 ? a.score / a.versesAnswered : 0;
+    const pctB = b.versesAnswered > 0 ? b.score / b.versesAnswered : 0;
+    return pctB - pctA || b.score - a.score;
+  });
+
+  const mode = quizState.lastMode === 'favorites' ? 'Favorites' : 'Random';
+
+  if (!quizState.isMultiplayer) {
+    const p = sorted[0];
+    const pct = p.versesAnswered > 0 ? Math.round((p.score / p.versesAnswered) * 100) : 0;
+    return `MemBlitz: I scored ${p.score}/${p.versesAnswered} (${pct}%) on a ${mode} quiz!\n\nMemorize Scripture, one verse at a time.`;
+  }
+
+  const ranks = ['1st', '2nd', '3rd'];
+  let text = 'MemBlitz Results:\n';
+  sorted.forEach((p, i) => {
+    const pct = p.versesAnswered > 0 ? Math.round((p.score / p.versesAnswered) * 100) : 0;
+    const rank = i < 3 ? ranks[i] : `${i + 1}th`;
+    text += `${rank}: ${p.name} ${p.score}/${p.versesAnswered} (${pct}%)\n`;
+  });
+  text += '\nMemorize Scripture, one verse at a time.';
+  return text;
+}
+
+async function shareResults() {
+  const text = generateShareText();
+  const btn = document.getElementById('share-results-btn');
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ text });
+    } catch (e) {
+      if (e.name !== 'AbortError') copyToClipboard(text, btn);
+    }
+  } else {
+    copyToClipboard(text, btn);
+  }
+}
+
+function copyToClipboard(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  }).catch(() => {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  });
+}
+
+// ===== TIMER =====
+function startTimer() {
+  if (!quizState.timerEnabled) return;
+  stopTimer();
+  quizState.timerRemaining = quizState.timerSeconds;
+  const timerEl = document.getElementById('quiz-timer');
+  timerEl.classList.remove('hidden', 'warning');
+  timerEl.textContent = quizState.timerRemaining;
+
+  quizState.timerInterval = setInterval(() => {
+    quizState.timerRemaining--;
+    timerEl.textContent = quizState.timerRemaining;
+
+    if (quizState.timerRemaining <= 5 && quizState.timerRemaining > 0) {
+      timerEl.classList.add('warning');
+      playTimerWarningSound();
+      vibrateTimerWarning();
+    }
+
+    if (quizState.timerRemaining <= 0) {
+      stopTimer();
+      revealAnswer();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (quizState.timerInterval) {
+    clearInterval(quizState.timerInterval);
+    quizState.timerInterval = null;
+  }
+}
+
+// ===== SWIPE GESTURES =====
+function setupSwipeGestures() {
+  const flashcard = document.getElementById('flashcard');
+  let startX = 0, startY = 0, startTime = 0;
+  const THRESHOLD = 60;
+  const TIME_LIMIT = 300;
+
+  flashcard.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+    startTime = Date.now();
+    flashcard.style.transition = 'none';
+  }, { passive: true });
+
+  flashcard.addEventListener('touchmove', (e) => {
+    const touch = e.touches[0];
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    const isFront = !document.getElementById('flashcard-front').classList.contains('hidden');
+
+    if (isFront) {
+      // Only respond to up swipe on front
+      if (dy < -20) {
+        flashcard.style.transform = `translateY(${dy * 0.3}px)`;
+        flashcard.style.opacity = Math.max(0.7, 1 + dy / 300);
+      }
+    } else {
+      // Left/right swipe on back
+      if (Math.abs(dx) > 20) {
+        const rotation = dx * 0.03;
+        flashcard.style.transform = `translateX(${dx * 0.4}px) rotate(${rotation}deg)`;
+        // Color tint overlay
+        if (dx > 30) {
+          flashcard.style.boxShadow = `inset 0 0 60px rgba(16, 185, 129, ${Math.min(0.2, dx / 500)})`;
+        } else if (dx < -30) {
+          flashcard.style.boxShadow = `inset 0 0 60px rgba(239, 68, 68, ${Math.min(0.2, Math.abs(dx) / 500)})`;
+        }
+      }
+    }
+  }, { passive: true });
+
+  flashcard.addEventListener('touchend', (e) => {
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    const elapsed = Date.now() - startTime;
+
+    // Reset visual state
+    flashcard.style.transition = 'transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease';
+    flashcard.style.transform = '';
+    flashcard.style.opacity = '';
+    flashcard.style.boxShadow = '';
+
+    if (elapsed > TIME_LIMIT) return;
+
+    const isFront = !document.getElementById('flashcard-front').classList.contains('hidden');
+
+    if (isFront && dy < -THRESHOLD && Math.abs(dx) < Math.abs(dy)) {
+      // Swipe up on front → reveal
+      revealAnswer();
+    } else if (!isFront) {
+      if (dx > THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+        // Swipe right on back → knew it
+        rateAnswer(true);
+      } else if (dx < -THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+        // Swipe left on back → still learning
+        rateAnswer(false);
+      }
+    }
+  }, { passive: true });
 }
 
 // Handle manual URL input
