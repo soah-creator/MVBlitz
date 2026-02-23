@@ -68,6 +68,60 @@
       </div>
     </section>
 
+    <!-- Quiz Setup View (verse count selection) -->
+    <section id="quiz-setup-view" class="view">
+      <button class="back-btn" id="quiz-setup-back-btn">&larr; Back to Home</button>
+      <div class="quiz-setup-card">
+        <h2 class="quiz-setup-title" id="quiz-setup-title">Favorites Quiz</h2>
+        <p class="quiz-setup-available" id="quiz-setup-available">20 verses available</p>
+
+        <!-- Player Count Picker -->
+        <label class="quiz-setup-label">How many players?</label>
+        <div class="player-count-picker">
+          <button class="btn-player-preset active" data-count="1">1</button>
+          <button class="btn-player-preset" data-count="2">2</button>
+          <button class="btn-player-preset" data-count="3">3</button>
+          <button class="btn-player-preset" data-count="4">4</button>
+          <button class="btn-player-preset" data-count="5">5</button>
+          <button class="btn-player-preset" data-count="6">6</button>
+          <button class="btn-player-preset" data-count="7">7</button>
+          <button class="btn-player-preset" data-count="8">8</button>
+        </div>
+
+        <!-- Player Names (hidden when 1 player) -->
+        <div class="player-names-section hidden" id="player-names-section">
+          <label class="quiz-setup-label">Player Names</label>
+          <div class="player-names-list" id="player-names-list">
+            <!-- Dynamically rendered inputs -->
+          </div>
+        </div>
+
+        <label class="quiz-setup-label" for="quiz-verse-count" id="verse-count-label">How many verses?</label>
+        <div class="quiz-verse-count-picker">
+          <button class="btn-count-preset active" data-count="5">5</button>
+          <button class="btn-count-preset" data-count="10">10</button>
+          <button class="btn-count-preset" data-count="15">15</button>
+          <button class="btn-count-preset" data-count="all">All</button>
+        </div>
+        <div class="quiz-setup-custom">
+          <input type="range" id="quiz-verse-count" min="1" max="50" value="5">
+          <span class="quiz-verse-count-display" id="quiz-verse-count-display">5 verses</span>
+        </div>
+        <p class="quiz-setup-note hidden" id="quiz-setup-note"></p>
+        <button class="btn btn-primary quiz-start-btn" id="quiz-start-btn">Start Quiz</button>
+      </div>
+    </section>
+
+    <!-- Handoff View (multiplayer: pass the device) -->
+    <section id="handoff-view" class="view">
+      <div class="handoff-card">
+        <p class="handoff-round" id="handoff-round">Round 1 of 5</p>
+        <h2 class="handoff-title">Pass to</h2>
+        <p class="handoff-player-name" id="handoff-player-name">Player 1</p>
+        <button class="btn btn-primary handoff-ready-btn" id="handoff-ready-btn">I'm Ready</button>
+      </div>
+    </section>
+
     <!-- Quiz View -->
     <section id="quiz-view" class="view">
       <div class="quiz-header">
@@ -121,11 +175,11 @@
     <section id="quiz-complete-view" class="view">
       <div class="card quiz-complete">
         <h2 id="complete-title">Quiz Complete!</h2>
-        <p class="score" id="final-score">8/10</p>
-        <p class="score-percentage" id="final-percentage">80%</p>
-        <p class="score-message" id="score-message">Great job memorizing Scripture!</p>
+        <div class="mp-scoreboard" id="mp-scoreboard">
+          <!-- Dynamically rendered player rankings -->
+        </div>
         <div class="quiz-actions" style="margin-top: 24px;">
-          <button class="btn btn-primary" id="restart-quiz-btn">Quiz Again</button>
+          <button class="btn btn-primary" id="restart-quiz-btn">Play Again</button>
           <button class="btn btn-secondary" id="back-home-btn">Back to Home</button>
         </div>
       </div>

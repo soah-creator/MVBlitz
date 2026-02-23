@@ -330,6 +330,103 @@ header .tagline {
   font-weight: 500;
 }
 
+/* Quiz Setup View */
+.quiz-setup-card {
+  max-width: 420px;
+  margin: 40px auto 0;
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 32px 28px;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.quiz-setup-title {
+  color: var(--primary-dark);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.quiz-setup-available {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+.quiz-setup-label {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12px;
+  font-size: 1.05rem;
+}
+
+.quiz-verse-count-picker {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.btn-count-preset {
+  padding: 10px 18px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--transition);
+  min-width: 52px;
+}
+
+.btn-count-preset:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-count-preset.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.btn-count-preset.disabled-preset {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.quiz-setup-custom {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+  padding: 0 4px;
+}
+
+.quiz-setup-custom input[type="range"] {
+  flex: 1;
+  accent-color: var(--primary);
+  height: 6px;
+}
+
+.quiz-verse-count-display {
+  font-weight: 600;
+  color: var(--primary-dark);
+  font-size: 0.95rem;
+  min-width: 80px;
+  text-align: right;
+}
+
+.quiz-start-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 1.1rem;
+}
+
 /* Favorite Star Button (Manage View) */
 .btn-favorite {
   background: none;
@@ -977,6 +1074,17 @@ header .tagline {
     padding: 20px 12px;
   }
 
+  .quiz-setup-card {
+    margin-top: 24px;
+    padding: 24px 20px;
+  }
+
+  .btn-count-preset {
+    padding: 8px 14px;
+    min-width: 44px;
+    font-size: 0.9rem;
+  }
+
   .quiz-complete {
     padding: 32px 20px;
   }
@@ -1025,6 +1133,21 @@ header .tagline {
 
   .image-search-row .btn {
     width: 100%;
+  }
+
+  .handoff-card {
+    margin-top: 40px;
+    padding: 36px 20px;
+  }
+
+  .handoff-player-name {
+    font-size: 1.8rem;
+  }
+
+  .btn-player-preset {
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
   }
 }
 
@@ -1457,6 +1580,196 @@ header .tagline {
     max-width: 140px;
     font-size: 0.8rem;
   }
+}
+
+/* ===== MULTIPLAYER STYLES ===== */
+
+/* Player Count Picker */
+.player-count-picker {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.btn-player-preset {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-player-preset:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-player-preset.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* Player Names Section */
+.player-names-section {
+  margin-bottom: 24px;
+}
+
+.player-names-section.hidden {
+  display: none;
+}
+
+.player-names-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.player-name-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  color: var(--text);
+  transition: all var(--transition);
+}
+
+.player-name-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: var(--focus-ring);
+  background: var(--primary-light);
+}
+
+.player-name-input::placeholder {
+  color: var(--text-light);
+  opacity: 0.7;
+}
+
+/* Quiz Setup Note */
+.quiz-setup-note {
+  color: var(--text-light);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: var(--accent-light);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+}
+
+.quiz-setup-note.hidden {
+  display: none;
+}
+
+/* Handoff View */
+.handoff-card {
+  max-width: 420px;
+  margin: 80px auto 0;
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 48px 32px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.handoff-round {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.handoff-title {
+  color: var(--text-light);
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.handoff-player-name {
+  color: var(--primary-dark);
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 32px;
+  letter-spacing: -0.5px;
+}
+
+.handoff-ready-btn {
+  width: 100%;
+  padding: 16px;
+  font-size: 1.15rem;
+}
+
+/* Multiplayer Scoreboard */
+.mp-scoreboard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.mp-score-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--bg);
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  transition: all var(--transition);
+}
+
+.mp-score-row.gold {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+}
+
+.mp-score-row.silver {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-color: #94a3b8;
+}
+
+.mp-score-row.bronze {
+  background: linear-gradient(135deg, #fef3e2 0%, #fed7aa 100%);
+  border-color: #f97316;
+}
+
+.mp-rank {
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  min-width: 32px;
+  text-align: center;
+}
+
+.mp-score-row.gold .mp-rank { color: #b45309; }
+.mp-score-row.silver .mp-rank { color: #475569; }
+.mp-score-row.bronze .mp-rank { color: #c2410c; }
+
+.mp-player-name {
+  flex: 1;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.mp-player-stats {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--primary-dark);
 }
 
 /* High contrast focus for accessibility */

@@ -53,7 +53,13 @@ let quizState = {
   score: 0,
   answered: false,
   versesAnswered: 0,
-  lastMode: 'random'
+  lastMode: 'random',
+  // Multiplayer
+  isMultiplayer: false,
+  players: [],          // { name, verses[], currentVerseIndex, score, versesAnswered }
+  currentPlayerIndex: 0,
+  currentRound: 1,
+  totalRounds: 0
 };
 
 // Auth state
@@ -63,6 +69,8 @@ let isAuthMode = 'login'; // 'login' or 'signup'
 const views = {
   auth: document.getElementById('auth-view'),
   home: document.getElementById('home-view'),
+  quizSetup: document.getElementById('quiz-setup-view'),
+  handoff: document.getElementById('handoff-view'),
   quiz: document.getElementById('quiz-view'),
   quizComplete: document.getElementById('quiz-complete-view'),
   manage: document.getElementById('manage-view'),
@@ -242,9 +250,23 @@ function populateBookDropdown() {
 // Set up all event listeners
 function setupEventListeners() {
   // Home view — quiz mode buttons
-  document.getElementById('quiz-favorites-btn').addEventListener('click', () => startQuiz('favorites'));
-  document.getElementById('quiz-random-btn').addEventListener('click', () => startQuiz('random'));
+  document.getElementById('quiz-favorites-btn').addEventListener('click', () => openQuizSetup('favorites'));
+  document.getElementById('quiz-random-btn').addEventListener('click', () => openQuizSetup('random'));
   document.getElementById('manage-verses-btn').addEventListener('click', () => showView('manage'));
+
+  // Quiz setup view
+  document.getElementById('quiz-setup-back-btn').addEventListener('click', () => showView('home'));
+  document.getElementById('quiz-start-btn').addEventListener('click', startQuizFromSetup);
+  document.getElementById('quiz-verse-count').addEventListener('input', onVerseCountSliderChange);
+  document.querySelectorAll('.btn-count-preset').forEach(btn => {
+    btn.addEventListener('click', onCountPresetClick);
+  });
+  document.querySelectorAll('.btn-player-preset').forEach(btn => {
+    btn.addEventListener('click', onPlayerPresetClick);
+  });
+
+  // Handoff view
+  document.getElementById('handoff-ready-btn').addEventListener('click', onHandoffReady);
 
   // Quiz view
   document.getElementById('quiz-back-btn').addEventListener('click', () => showView('home'));
@@ -361,8 +383,17 @@ function formatReference(ref) {
 
 // ===== QUIZ FUNCTIONS =====
 
-// Start the quiz
-async function startQuiz(mode = 'random') {
+// Pending setup state
+let quizSetupState = {
+  mode: 'random',
+  availableVerses: [],
+  selectedCount: 5,
+  playerCount: 1,
+  playerNames: []
+};
+
+// Open the quiz setup screen
+async function openQuizSetup(mode) {
   let verses;
 
   if (mode === 'favorites') {
@@ -380,13 +411,269 @@ async function startQuiz(mode = 'random') {
     }
   }
 
-  // Shuffle verses
-  quizState.verses = shuffleArray([...verses]);
-  quizState.currentIndex = 0;
-  quizState.score = 0;
-  quizState.versesAnswered = 0;
-  quizState.lastMode = mode;
+  quizSetupState.mode = mode;
+  quizSetupState.availableVerses = verses;
 
+  // Reset player count to 1
+  quizSetupState.playerCount = 1;
+  quizSetupState.playerNames = [];
+  document.querySelectorAll('.btn-player-preset').forEach(b => b.classList.remove('active'));
+  document.querySelector('.btn-player-preset[data-count="1"]').classList.add('active');
+  document.getElementById('player-names-section').classList.add('hidden');
+  document.getElementById('verse-count-label').textContent = 'How many verses?';
+  document.getElementById('quiz-setup-note').classList.add('hidden');
+  document.getElementById('quiz-start-btn').disabled = false;
+
+  // Update setup UI
+  const total = verses.length;
+  document.getElementById('quiz-setup-title').textContent =
+    mode === 'favorites' ? 'Favorites Quiz' : 'Random Quiz';
+  document.getElementById('quiz-setup-available').textContent =
+    `${total} verse${total === 1 ? '' : 's'} available`;
+
+  // Configure slider
+  const slider = document.getElementById('quiz-verse-count');
+  slider.max = total;
+  slider.min = 1;
+
+  // Pick a sensible default
+  const defaultCount = Math.min(5, total);
+  slider.value = defaultCount;
+  quizSetupState.selectedCount = defaultCount;
+  updateVerseCountDisplay(defaultCount, total);
+
+  // Update preset buttons
+  document.querySelectorAll('.btn-count-preset').forEach(btn => {
+    const val = btn.dataset.count;
+    if (val === 'all') {
+      btn.classList.toggle('disabled-preset', false);
+    } else {
+      const num = parseInt(val);
+      btn.classList.toggle('disabled-preset', num > total);
+    }
+    // Highlight matching preset
+    btn.classList.toggle('active',
+      (val === 'all' && defaultCount === total) ||
+      (val !== 'all' && parseInt(val) === defaultCount)
+    );
+  });
+
+  showView('quizSetup');
+}
+
+// Handle preset button clicks
+function onCountPresetClick(e) {
+  const btn = e.currentTarget;
+  if (btn.classList.contains('disabled-preset')) return;
+
+  const maxVal = parseInt(document.getElementById('quiz-verse-count').max);
+  const val = btn.dataset.count;
+  const count = val === 'all' ? maxVal : parseInt(val);
+
+  if (count > maxVal) return;
+
+  quizSetupState.selectedCount = count;
+  document.getElementById('quiz-verse-count').value = count;
+  updateVerseCountDisplay(count, maxVal);
+
+  // Update active state
+  document.querySelectorAll('.btn-count-preset').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// Handle slider change
+function onVerseCountSliderChange() {
+  const count = parseInt(document.getElementById('quiz-verse-count').value);
+  const maxVal = parseInt(document.getElementById('quiz-verse-count').max);
+  quizSetupState.selectedCount = count;
+  updateVerseCountDisplay(count, maxVal);
+
+  // Update preset active state to match slider
+  document.querySelectorAll('.btn-count-preset').forEach(btn => {
+    const val = btn.dataset.count;
+    btn.classList.toggle('active',
+      (val === 'all' && count === maxVal) ||
+      (val !== 'all' && parseInt(val) === count)
+    );
+  });
+}
+
+// Update the verse count display text
+function updateVerseCountDisplay(count, total) {
+  const display = document.getElementById('quiz-verse-count-display');
+  display.textContent = count === total ? `All ${total} verses` : `${count} verse${count === 1 ? '' : 's'}`;
+}
+
+// Handle player preset button clicks
+function onPlayerPresetClick(e) {
+  const btn = e.currentTarget;
+  const count = parseInt(btn.dataset.count);
+
+  quizSetupState.playerCount = count;
+
+  // Update active state
+  document.querySelectorAll('.btn-player-preset').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Show/hide player names section
+  const namesSection = document.getElementById('player-names-section');
+  if (count > 1) {
+    namesSection.classList.remove('hidden');
+    renderPlayerNameInputs(count);
+  } else {
+    namesSection.classList.add('hidden');
+  }
+
+  // Update verse count label
+  document.getElementById('verse-count-label').textContent =
+    count > 1 ? 'How many verses per player?' : 'How many verses?';
+
+  // Recalculate max verse count based on player count
+  updateVerseCountConstraints();
+}
+
+// Render player name input fields
+function renderPlayerNameInputs(count) {
+  const list = document.getElementById('player-names-list');
+  list.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const existing = quizSetupState.playerNames[i] || '';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'player-name-input';
+    input.placeholder = `Player ${i + 1}`;
+    input.value = existing;
+    input.maxLength = 20;
+    input.dataset.index = i;
+    input.addEventListener('input', (e) => {
+      quizSetupState.playerNames[parseInt(e.target.dataset.index)] = e.target.value.trim();
+    });
+    list.appendChild(input);
+  }
+  // Trim array
+  quizSetupState.playerNames = quizSetupState.playerNames.slice(0, count);
+}
+
+// Recalculate verse slider max based on player count
+function updateVerseCountConstraints() {
+  const total = quizSetupState.availableVerses.length;
+  const playerCount = quizSetupState.playerCount;
+  const maxPerPlayer = Math.floor(total / playerCount);
+
+  const slider = document.getElementById('quiz-verse-count');
+  const noteEl = document.getElementById('quiz-setup-note');
+
+  if (maxPerPlayer < 1) {
+    // Not enough verses for this many players
+    slider.max = 1;
+    slider.value = 1;
+    quizSetupState.selectedCount = 1;
+    noteEl.textContent = `Not enough verses for ${playerCount} players. Add more verses or reduce players.`;
+    noteEl.classList.remove('hidden');
+    document.getElementById('quiz-start-btn').disabled = true;
+  } else {
+    slider.max = maxPerPlayer;
+    document.getElementById('quiz-start-btn').disabled = false;
+
+    // Cap current selection
+    if (quizSetupState.selectedCount > maxPerPlayer) {
+      quizSetupState.selectedCount = maxPerPlayer;
+      slider.value = maxPerPlayer;
+    }
+
+    if (maxPerPlayer < total && playerCount > 1) {
+      noteEl.textContent = `Max ${maxPerPlayer} verses per player (${total} total ÷ ${playerCount} players)`;
+      noteEl.classList.remove('hidden');
+    } else {
+      noteEl.classList.add('hidden');
+    }
+  }
+
+  updateVerseCountDisplay(quizSetupState.selectedCount, parseInt(slider.max));
+
+  // Update preset buttons
+  document.querySelectorAll('.btn-count-preset').forEach(btn => {
+    const val = btn.dataset.count;
+    if (val === 'all') {
+      btn.classList.toggle('disabled-preset', false);
+    } else {
+      const num = parseInt(val);
+      btn.classList.toggle('disabled-preset', num > maxPerPlayer);
+    }
+    btn.classList.toggle('active',
+      (val === 'all' && quizSetupState.selectedCount === maxPerPlayer) ||
+      (val !== 'all' && parseInt(val) === quizSetupState.selectedCount)
+    );
+  });
+}
+
+// Start quiz from setup screen
+function startQuizFromSetup() {
+  const verses = quizSetupState.availableVerses;
+  const count = quizSetupState.selectedCount;
+  const playerCount = quizSetupState.playerCount;
+
+  quizState.lastMode = quizSetupState.mode;
+
+  if (playerCount <= 1) {
+    // Single player — existing flow
+    const shuffled = shuffleArray([...verses]);
+    quizState.verses = shuffled.slice(0, count);
+    quizState.currentIndex = 0;
+    quizState.score = 0;
+    quizState.versesAnswered = 0;
+    quizState.isMultiplayer = false;
+    quizState.players = [];
+
+    showView('quiz');
+    updateScoreDisplay();
+    displayCurrentVerse();
+  } else {
+    // Multiplayer
+    const shuffled = shuffleArray([...verses]);
+    const totalNeeded = playerCount * count;
+
+    quizState.isMultiplayer = true;
+    quizState.currentPlayerIndex = 0;
+    quizState.currentRound = 1;
+    quizState.totalRounds = count;
+
+    // Build player objects with unique verse subsets
+    quizState.players = [];
+    for (let i = 0; i < playerCount; i++) {
+      const name = (quizSetupState.playerNames[i] || '').trim() || `Player ${i + 1}`;
+      const playerVerses = shuffled.slice(i * count, (i + 1) * count);
+      quizState.players.push({
+        name,
+        verses: playerVerses,
+        currentVerseIndex: 0,
+        score: 0,
+        versesAnswered: 0
+      });
+    }
+
+    // Show handoff for first player
+    showHandoff();
+  }
+}
+
+// Start the quiz (used by "Quiz Again" button)
+async function startQuiz(mode = 'random') {
+  // Re-open setup so user can pick count again
+  await openQuizSetup(mode);
+}
+
+// Show the handoff screen for the current player
+function showHandoff() {
+  const player = quizState.players[quizState.currentPlayerIndex];
+  document.getElementById('handoff-player-name').textContent = player.name;
+  document.getElementById('handoff-round').textContent =
+    `Round ${quizState.currentRound} of ${quizState.totalRounds}`;
+  showView('handoff');
+}
+
+// When player taps "I'm Ready" on handoff screen
+function onHandoffReady() {
   showView('quiz');
   updateScoreDisplay();
   displayCurrentVerse();
@@ -403,13 +690,26 @@ function shuffleArray(array) {
 
 // Display the current verse in quiz mode (flashcard style)
 function displayCurrentVerse() {
-  const verse = quizState.verses[quizState.currentIndex];
+  let verse;
+  let currentNum, totalNum, progressText;
+
+  if (quizState.isMultiplayer) {
+    const player = quizState.players[quizState.currentPlayerIndex];
+    verse = player.verses[player.currentVerseIndex];
+    currentNum = player.currentVerseIndex + 1;
+    totalNum = player.verses.length;
+    progressText = `${player.name} — Verse ${currentNum} of ${totalNum}`;
+  } else {
+    verse = quizState.verses[quizState.currentIndex];
+    currentNum = quizState.currentIndex + 1;
+    totalNum = quizState.verses.length;
+    progressText = `Verse ${currentNum} of ${totalNum}`;
+  }
+
   quizState.answered = false;
 
   // Update progress
-  const currentNum = quizState.currentIndex + 1;
-  const totalNum = quizState.verses.length;
-  document.getElementById('quiz-progress').textContent = `Verse ${currentNum} of ${totalNum}`;
+  document.getElementById('quiz-progress').textContent = progressText;
 
   // Update progress bar
   const progressPercent = (currentNum / totalNum) * 100;
@@ -457,75 +757,145 @@ function revealAnswer() {
 // Update the running score display
 function updateScoreDisplay() {
   const scoreEl = document.getElementById('quiz-score');
-  if (quizState.versesAnswered === 0) {
-    scoreEl.textContent = '0% correct';
+
+  if (quizState.isMultiplayer) {
+    const player = quizState.players[quizState.currentPlayerIndex];
+    if (player.versesAnswered === 0) {
+      scoreEl.textContent = '0% correct';
+    } else {
+      const percentage = Math.round((player.score / player.versesAnswered) * 100);
+      scoreEl.textContent = `${percentage}% correct`;
+    }
   } else {
-    const percentage = Math.round((quizState.score / quizState.versesAnswered) * 100);
-    scoreEl.textContent = `${percentage}% correct`;
+    if (quizState.versesAnswered === 0) {
+      scoreEl.textContent = '0% correct';
+    } else {
+      const percentage = Math.round((quizState.score / quizState.versesAnswered) * 100);
+      scoreEl.textContent = `${percentage}% correct`;
+    }
   }
 }
 
 // Rate whether user knew the answer
 function rateAnswer(knewIt) {
-  quizState.versesAnswered++;
+  if (quizState.isMultiplayer) {
+    rateAnswerMultiplayer(knewIt);
+  } else {
+    quizState.versesAnswered++;
+    if (knewIt) quizState.score++;
+    updateScoreDisplay();
 
-  if (knewIt) {
-    quizState.score++;
+    quizState.currentIndex++;
+    if (quizState.currentIndex >= quizState.verses.length) {
+      showQuizComplete(false);
+    } else {
+      displayCurrentVerse();
+    }
+  }
+}
+
+// Multiplayer answer rating with round-robin
+function rateAnswerMultiplayer(knewIt) {
+  const player = quizState.players[quizState.currentPlayerIndex];
+  player.versesAnswered++;
+  if (knewIt) player.score++;
+
+  player.currentVerseIndex++;
+
+  // Move to next player
+  quizState.currentPlayerIndex = (quizState.currentPlayerIndex + 1) % quizState.players.length;
+
+  // Check if we completed a round (everyone answered one more verse)
+  if (quizState.currentPlayerIndex === 0) {
+    quizState.currentRound++;
   }
 
-  updateScoreDisplay();
-
-  // Move to next verse
-  quizState.currentIndex++;
-
-  if (quizState.currentIndex >= quizState.verses.length) {
-    showQuizComplete(false);
+  // Check if all players have finished all their verses
+  const allDone = quizState.players.every(p => p.currentVerseIndex >= p.verses.length);
+  if (allDone) {
+    showMultiplayerScoreboard(false);
   } else {
-    displayCurrentVerse();
+    // Show handoff for next player
+    showHandoff();
   }
 }
 
 // End session early
 function endSession() {
-  if (quizState.versesAnswered === 0) {
-    showView('home');
-    return;
-  }
-
-  if (confirm('End this session and see your results?')) {
-    showQuizComplete(true);
+  if (quizState.isMultiplayer) {
+    const anyAnswered = quizState.players.some(p => p.versesAnswered > 0);
+    if (!anyAnswered) {
+      showView('home');
+      return;
+    }
+    if (confirm('End this session and see the standings?')) {
+      showMultiplayerScoreboard(true);
+    }
+  } else {
+    if (quizState.versesAnswered === 0) {
+      showView('home');
+      return;
+    }
+    if (confirm('End this session and see your results?')) {
+      showQuizComplete(true);
+    }
   }
 }
 
-// Show quiz completion screen
+// Show quiz completion screen (unified for single & multiplayer)
 function showQuizComplete(endedEarly = false) {
-  const percentage = quizState.versesAnswered > 0
-    ? Math.round((quizState.score / quizState.versesAnswered) * 100)
-    : 0;
-
-  // Update title based on whether ended early
   document.getElementById('complete-title').textContent =
     endedEarly ? 'Session Ended' : 'Quiz Complete!';
 
-  // Update score display
-  document.getElementById('final-score').textContent =
-    `${quizState.score}/${quizState.versesAnswered}`;
-  document.getElementById('final-percentage').textContent = `${percentage}%`;
-
-  // Update message based on percentage
-  let message;
-  if (percentage >= 90) {
-    message = 'Excellent! You know these verses well!';
-  } else if (percentage >= 70) {
-    message = 'Great job memorizing Scripture!';
-  } else if (percentage >= 50) {
-    message = 'Good effort! Keep practicing!';
+  // Build a players array — for single player, wrap the solo stats into one entry
+  let players;
+  if (quizState.isMultiplayer) {
+    players = quizState.players;
   } else {
-    message = 'Keep studying - you\'ll get there!';
+    players = [{
+      name: 'You',
+      score: quizState.score,
+      versesAnswered: quizState.versesAnswered
+    }];
   }
-  document.getElementById('score-message').textContent = message;
+
+  // Sort by accuracy descending, then score descending
+  const sorted = [...players].sort((a, b) => {
+    const pctA = a.versesAnswered > 0 ? a.score / a.versesAnswered : 0;
+    const pctB = b.versesAnswered > 0 ? b.score / b.versesAnswered : 0;
+    if (pctB !== pctA) return pctB - pctA;
+    return b.score - a.score;
+  });
+
+  const medals = ['gold', 'silver', 'bronze'];
+  const medalSymbols = ['1st', '2nd', '3rd'];
+
+  const scoreboard = document.getElementById('mp-scoreboard');
+  scoreboard.innerHTML = '';
+
+  sorted.forEach((player, index) => {
+    const pct = player.versesAnswered > 0
+      ? Math.round((player.score / player.versesAnswered) * 100)
+      : 0;
+    const medalClass = index < 3 ? medals[index] : '';
+    const rank = index + 1;
+
+    const row = document.createElement('div');
+    row.className = `mp-score-row ${medalClass}`;
+    row.innerHTML = `
+      <span class="mp-rank">${index < 3 ? medalSymbols[index] : rank + 'th'}</span>
+      <span class="mp-player-name">${player.name}</span>
+      <span class="mp-player-stats">${player.score}/${player.versesAnswered} (${pct}%)</span>
+    `;
+    scoreboard.appendChild(row);
+  });
 
   showView('quizComplete');
+}
+
+// Alias for multiplayer completion
+function showMultiplayerScoreboard(endedEarly = false) {
+  showQuizComplete(endedEarly);
 }
 
 // Show image hint
