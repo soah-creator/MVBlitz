@@ -264,6 +264,9 @@ function setupEventListeners() {
   document.getElementById('add-verse-btn').addEventListener('click', () => openVerseForm());
   document.getElementById('add-first-verse-btn').addEventListener('click', () => openVerseForm());
 
+  // Reset verses
+  document.getElementById('reset-verses-btn').addEventListener('click', onResetVerses);
+
   // Form view
   document.getElementById('form-back-btn').addEventListener('click', () => showView('manage'));
   document.getElementById('cancel-form-btn').addEventListener('click', () => showView('manage'));
@@ -599,6 +602,16 @@ async function confirmDeleteVerse(id) {
 async function toggleFavoriteVerse(id) {
   await toggleFavorite(id);
   await renderVerseList();
+}
+
+// Reset verses to sample data
+async function onResetVerses() {
+  if (!confirm('This will replace all your current verses with the latest sample verses. Continue?')) {
+    return;
+  }
+  await resetToSamples();
+  await renderVerseList();
+  await updateVerseCount();
 }
 
 // ===== FORM FUNCTIONS =====

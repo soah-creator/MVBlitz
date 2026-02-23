@@ -675,6 +675,31 @@ header .tagline {
   flex-shrink: 0;
 }
 
+/* Reset Verses Button */
+.btn-reset-verses {
+  display: block;
+  margin: 32px auto 0;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-light);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  border-radius: 8px;
+}
+
+.btn-reset-verses:hover {
+  color: var(--error);
+  background: var(--error-light);
+}
+
+.btn-reset-verses:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
 /* Form View */
 .form-group {
   margin-bottom: 24px;

@@ -67,6 +67,34 @@ async function getFavoriteVerses() {
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
+// Reset all verses to the latest sample data
+async function resetToSamples() {
+  if (typeof SAMPLE_VERSES === 'undefined') {
+    return false;
+  }
+
+  // Delete all existing verses
+  const snapshot = await versesCollection().get();
+  const batchSize = 500;
+  const docs = snapshot.docs;
+  for (let i = 0; i < docs.length; i += batchSize) {
+    const batch = db.batch();
+    docs.slice(i, i + batchSize).forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+  }
+
+  // Re-seed from SAMPLE_VERSES
+  for (let i = 0; i < SAMPLE_VERSES.length; i += batchSize) {
+    const batch = db.batch();
+    SAMPLE_VERSES.slice(i, i + batchSize).forEach(verse => {
+      batch.set(versesCollection().doc(verse.id), verse);
+    });
+    await batch.commit();
+  }
+
+  return true;
+}
+
 // Initialize with sample verses if user has no verses yet
 async function initializeWithSamples() {
   if (typeof SAMPLE_VERSES === 'undefined') {
