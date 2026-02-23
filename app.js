@@ -55,8 +55,12 @@ let quizState = {
   versesAnswered: 0
 };
 
+// Auth state
+let isAuthMode = 'login'; // 'login' or 'signup'
+
 // DOM Elements
 const views = {
+  auth: document.getElementById('auth-view'),
   home: document.getElementById('home-view'),
   quiz: document.getElementById('quiz-view'),
   quizComplete: document.getElementById('quiz-complete-view'),
@@ -64,24 +68,164 @@ const views = {
   form: document.getElementById('form-view')
 };
 
+// ===== AUTHENTICATION =====
+
+// Set up auth event listeners immediately (before auth state fires)
+function setupAuthListeners() {
+  document.getElementById('auth-form').addEventListener('submit', onAuthFormSubmit);
+  document.getElementById('login-tab').addEventListener('click', () => switchAuthMode('login'));
+  document.getElementById('signup-tab').addEventListener('click', () => switchAuthMode('signup'));
+  document.getElementById('google-sign-in-btn').addEventListener('click', signInWithGoogle);
+  document.getElementById('guest-btn').addEventListener('click', signInAsGuest);
+  document.getElementById('logout-btn').addEventListener('click', handleSignOut);
+}
+
+// Attach auth listeners right away
+setupAuthListeners();
+
+// Auth state listener
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    // User is signed in
+    setCurrentUser(user.uid);
+    displayUserInfo(user);
+    await init();
+    showView('home');
+  } else {
+    // User is signed out
+    setCurrentUser(null);
+    showView('auth');
+  }
+});
+
+// Display user info in header
+function displayUserInfo(user) {
+  const userInfo = document.getElementById('user-info');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  if (user.isAnonymous) {
+    userInfo.textContent = 'Guest';
+    logoutBtn.textContent = 'Sign Up / Log In';
+  } else {
+    userInfo.textContent = user.displayName || user.email;
+    logoutBtn.textContent = 'Log Out';
+  }
+}
+
+// Sign in as guest (anonymous)
+async function signInAsGuest() {
+  try {
+    hideAuthError();
+    await auth.signInAnonymously();
+  } catch (error) {
+    showAuthError('Could not start guest session. Please try again.');
+  }
+}
+
+// Sign up with email/password
+async function signUpWithEmail(email, password) {
+  try {
+    hideAuthError();
+    await auth.createUserWithEmailAndPassword(email, password);
+  } catch (error) {
+    showAuthError(getAuthErrorMessage(error.code));
+  }
+}
+
+// Sign in with email/password
+async function signInWithEmail(email, password) {
+  try {
+    hideAuthError();
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (error) {
+    showAuthError(getAuthErrorMessage(error.code));
+  }
+}
+
+// Sign in with Google
+async function signInWithGoogle() {
+  try {
+    hideAuthError();
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+  } catch (error) {
+    console.error('Google sign-in error:', error.code, error.message);
+    if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+      showAuthError(getAuthErrorMessage(error.code));
+    }
+  }
+}
+
+// Sign out
+async function handleSignOut() {
+  try {
+    await auth.signOut();
+  } catch (error) {
+    console.error('Sign out error:', error);
+  }
+}
+
+// Get user-friendly auth error messages
+function getAuthErrorMessage(code) {
+  switch (code) {
+    case 'auth/email-already-in-use':
+      return 'An account with this email already exists.';
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.';
+    case 'auth/weak-password':
+      return 'Password must be at least 6 characters.';
+    case 'auth/user-not-found':
+      return 'No account found with this email.';
+    case 'auth/wrong-password':
+      return 'Incorrect password. Please try again.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please try again later.';
+    case 'auth/invalid-credential':
+      return 'Invalid email or password. Please try again.';
+    default:
+      return 'An error occurred. Please try again.';
+  }
+}
+
+// Show auth error
+function showAuthError(message) {
+  const errorEl = document.getElementById('auth-error');
+  errorEl.textContent = message;
+  errorEl.classList.remove('hidden');
+}
+
+// Hide auth error
+function hideAuthError() {
+  document.getElementById('auth-error').classList.add('hidden');
+}
+
+// ===== APP INITIALIZATION =====
+
 // Initialize the app
-function init() {
+async function init() {
   // Initialize with sample verses if empty
-  initializeWithSamples();
+  await initializeWithSamples();
 
   // Populate book dropdown
   populateBookDropdown();
 
-  // Set up event listeners
-  setupEventListeners();
+  // Set up event listeners (only once)
+  if (!init._listenersSet) {
+    setupEventListeners();
+    init._listenersSet = true;
+  }
 
   // Update verse count on home
-  updateVerseCount();
+  await updateVerseCount();
 }
 
 // Populate the book dropdown
 function populateBookDropdown() {
   const select = document.getElementById('verse-book');
+  // Clear existing options except the first placeholder
+  while (select.options.length > 1) {
+    select.remove(1);
+  }
   BIBLE_BOOKS.forEach(book => {
     const option = document.createElement('option');
     option.value = book;
@@ -128,6 +272,38 @@ function setupEventListeners() {
   document.getElementById('verse-verse').addEventListener('input', debounce(onVerseChange, 500));
 }
 
+// Handle auth form submission
+async function onAuthFormSubmit(e) {
+  e.preventDefault();
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+
+  if (isAuthMode === 'signup') {
+    await signUpWithEmail(email, password);
+  } else {
+    await signInWithEmail(email, password);
+  }
+}
+
+// Switch between login and signup modes
+function switchAuthMode(mode) {
+  isAuthMode = mode;
+  const loginTab = document.getElementById('login-tab');
+  const signupTab = document.getElementById('signup-tab');
+  const submitBtn = document.getElementById('auth-submit-btn');
+
+  if (mode === 'login') {
+    loginTab.classList.add('active');
+    signupTab.classList.remove('active');
+    submitBtn.textContent = 'Log In';
+  } else {
+    loginTab.classList.remove('active');
+    signupTab.classList.add('active');
+    submitBtn.textContent = 'Sign Up';
+  }
+  hideAuthError();
+}
+
 // Show a specific view
 function showView(viewName) {
   Object.values(views).forEach(view => view.classList.remove('active'));
@@ -142,8 +318,9 @@ function showView(viewName) {
 }
 
 // Update verse count on home screen
-function updateVerseCount() {
-  const count = getVerses().length;
+async function updateVerseCount() {
+  const verses = await getVerses();
+  const count = verses.length;
   const text = count === 1 ? '1 verse available' : `${count} verses available`;
   document.getElementById('verse-count').textContent = text;
 }
@@ -156,8 +333,8 @@ function formatReference(ref) {
 // ===== QUIZ FUNCTIONS =====
 
 // Start the quiz
-function startQuiz() {
-  const allVerses = getVerses();
+async function startQuiz() {
+  const allVerses = await getVerses();
   if (allVerses.length === 0) {
     alert('No verses available. Please add some verses first.');
     showView('manage');
@@ -324,8 +501,8 @@ function showTextHint() {
 // ===== MANAGE VERSES FUNCTIONS =====
 
 // Render the verse list
-function renderVerseList() {
-  const verses = getVerses();
+async function renderVerseList() {
+  const verses = await getVerses();
   const listEl = document.getElementById('verse-list');
   const emptyState = document.getElementById('empty-state');
 
@@ -367,18 +544,18 @@ function renderVerseList() {
 }
 
 // Confirm and delete a verse
-function confirmDeleteVerse(id) {
-  const verse = getVerseById(id);
+async function confirmDeleteVerse(id) {
+  const verse = await getVerseById(id);
   if (verse && confirm(`Delete "${formatReference(verse.reference)}"?`)) {
-    deleteVerse(id);
-    renderVerseList();
+    await deleteVerse(id);
+    await renderVerseList();
   }
 }
 
 // ===== FORM FUNCTIONS =====
 
 // Open the verse form (for add or edit)
-function openVerseForm(id = null) {
+async function openVerseForm(id = null) {
   const form = document.getElementById('verse-form');
   const title = document.getElementById('form-title');
   const chapterSelect = document.getElementById('verse-chapter');
@@ -406,7 +583,7 @@ function openVerseForm(id = null) {
 
   if (id) {
     // Edit mode
-    const verse = getVerseById(id);
+    const verse = await getVerseById(id);
     if (verse) {
       title.textContent = 'Edit Verse';
       document.getElementById('verse-id').value = verse.id;
@@ -445,7 +622,7 @@ function openVerseForm(id = null) {
 }
 
 // Save the verse form
-function saveVerseForm(e) {
+async function saveVerseForm(e) {
   e.preventDefault();
 
   const id = document.getElementById('verse-id').value || null;
@@ -461,7 +638,7 @@ function saveVerseForm(e) {
     textHint: document.getElementById('verse-text-hint').value.trim() || null
   };
 
-  saveVerse(verse);
+  await saveVerse(verse);
   showView('manage');
 }
 
@@ -839,6 +1016,3 @@ function onManualUrlInput() {
     document.getElementById('clear-image-btn').classList.add('hidden');
   }
 }
-
-// Initialize the app when DOM is ready
-document.addEventListener('DOMContentLoaded', init);
