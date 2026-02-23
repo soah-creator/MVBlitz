@@ -349,5 +349,152 @@ const SAMPLE_VERSES = [
     text: "And God will wipe away every tear from their eyes; there shall be no more death, nor sorrow, nor crying. There shall be no more pain, for the former things have passed away.",
     imageHintUrl: "https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=400",
     textHint: "John's vision of the new heaven and earth where God removes all suffering forever."
+  },
+  {
+    id: "sample-51",
+    reference: { book: "1 Peter", chapter: 2, verse: "9" },
+    text: "But you are a chosen generation, a royal priesthood, a holy nation, His own special people, that you may proclaim the praises of Him who called you out of darkness into His marvelous light.",
+    imageHintUrl: null,
+    textHint: "Peter describes believers' exalted identity and purpose as God's chosen people."
+  },
+  {
+    id: "sample-52",
+    reference: { book: "2 Samuel", chapter: 5, verse: "10" },
+    text: "So David went on and became great, and the Lord God of hosts was with him.",
+    imageHintUrl: null,
+    textHint: "A summary of David's rise to greatness, attributed entirely to God's presence with him."
+  },
+  {
+    id: "sample-53",
+    reference: { book: "Psalm", chapter: 119, verse: "11" },
+    text: "Your word I have hidden in my heart, that I might not sin against You.",
+    imageHintUrl: null,
+    textHint: "The psalmist emphasizes memorizing Scripture as a defense against sin."
+  },
+  {
+    id: "sample-54",
+    reference: { book: "John", chapter: 10, verse: "9" },
+    text: "I am the door. If anyone enters by Me, he will be saved, and will go in and out and find pasture.",
+    imageHintUrl: null,
+    textHint: "Jesus declares Himself as the only entrance to salvation and spiritual nourishment."
+  },
+  {
+    id: "sample-55",
+    reference: { book: "Psalm", chapter: 23, verse: "1-6" },
+    text: "The Lord is my shepherd; I shall not want. He makes me to lie down in green pastures; He leads me beside the still waters. He restores my soul; He leads me in the paths of righteousness for His name's sake. Yea, though I walk through the valley of the shadow of death, I will fear no evil; for You are with me; Your rod and Your staff, they comfort me. You prepare a table before me in the presence of my enemies; You anoint my head with oil; my cup runs over. Surely goodness and mercy shall follow me all the days of my life; and I will dwell in the house of the Lord forever.",
+    imageHintUrl: null,
+    textHint: "The complete Shepherd's Psalm, David's beloved declaration of God's provision, protection, and eternal care."
+  },
+  {
+    id: "sample-56",
+    reference: { book: "Matthew", chapter: 19, verse: "26" },
+    text: "But Jesus looked at them and said to them, \"With men this is impossible, but with God all things are possible.\"",
+    imageHintUrl: null,
+    textHint: "Jesus assures His disciples that God's power transcends all human limitations."
+  },
+  {
+    id: "sample-57",
+    reference: { book: "Philippians", chapter: 4, verse: "19" },
+    text: "And my God shall supply all your need according to His riches in glory by Christ Jesus.",
+    imageHintUrl: null,
+    textHint: "Paul assures the Philippians that God will meet every need from His unlimited resources."
+  },
+  {
+    id: "sample-58",
+    reference: { book: "Psalm", chapter: 90, verse: "12" },
+    text: "So teach us to number our days, that we may gain a heart of wisdom.",
+    imageHintUrl: null,
+    textHint: "Moses prays for awareness of life's brevity to cultivate wisdom in daily living."
+  },
+  {
+    id: "sample-59",
+    reference: { book: "Romans", chapter: 3, verse: "23" },
+    text: "For all have sinned and fall short of the glory of God.",
+    imageHintUrl: null,
+    textHint: "Paul declares the universal reality of sin affecting every person."
+  },
+  {
+    id: "sample-60",
+    reference: { book: "John", chapter: 11, verse: "25" },
+    text: "Jesus said to her, \"I am the resurrection and the life. He who believes in Me, though he may die, he shall live.\"",
+    imageHintUrl: null,
+    textHint: "Jesus declares His power over death to Martha before raising Lazarus."
+  },
+  {
+    id: "sample-61",
+    reference: { book: "1 John", chapter: 5, verse: "14" },
+    text: "Now this is the confidence that we have in Him, that if we ask anything according to His will, He hears us.",
+    imageHintUrl: null,
+    textHint: "John assures believers of God's attentiveness to prayers aligned with His will."
+  },
+  {
+    id: "sample-62",
+    reference: { book: "Proverbs", chapter: 17, verse: "22" },
+    text: "A merry heart does good, like medicine, but a broken spirit dries the bones.",
+    imageHintUrl: null,
+    textHint: "Solomon teaches that joy promotes health while despair brings decay."
+  },
+  {
+    id: "sample-63",
+    reference: { book: "Psalm", chapter: 121, verse: "1-2" },
+    text: "I will lift up my eyes to the hills — from whence comes my help? My help comes from the Lord, who made heaven and earth.",
+    imageHintUrl: null,
+    textHint: "A pilgrim psalm declaring dependence on God, the Creator, as the sole source of help."
+  },
+  {
+    id: "sample-64",
+    reference: { book: "1 John", chapter: 4, verse: "9" },
+    text: "In this the love of God was manifested toward us, that God has sent His only begotten Son into the world, that we might live through Him.",
+    imageHintUrl: null,
+    textHint: "John explains that God's love is revealed through sending Jesus to give us life."
+  },
+  {
+    id: "sample-65",
+    reference: { book: "Matthew", chapter: 7, verse: "7" },
+    text: "Ask, and it will be given to you; seek, and you will find; knock, and it will be opened to you.",
+    imageHintUrl: null,
+    textHint: "Jesus encourages persistent prayer with the promise that God responds to those who seek Him."
+  },
+  {
+    id: "sample-66",
+    reference: { book: "John", chapter: 15, verse: "5" },
+    text: "I am the vine, you are the branches. He who abides in Me, and I in him, bears much fruit; for without Me you can do nothing.",
+    imageHintUrl: null,
+    textHint: "Jesus teaches that spiritual fruitfulness depends entirely on staying connected to Him."
+  },
+  {
+    id: "sample-67",
+    reference: { book: "Galatians", chapter: 5, verse: "22-23" },
+    text: "But the fruit of the Spirit is love, joy, peace, longsuffering, kindness, goodness, faithfulness, gentleness, self-control. Against such there is no law.",
+    imageHintUrl: null,
+    textHint: "Paul lists the nine qualities produced by the Holy Spirit in a believer's life."
+  },
+  {
+    id: "sample-68",
+    reference: { book: "John", chapter: 6, verse: "35" },
+    text: "And Jesus said to them, \"I am the bread of life. He who comes to Me shall never hunger, and he who believes in Me shall never thirst.\"",
+    imageHintUrl: null,
+    textHint: "Jesus declares Himself as the source of ultimate spiritual satisfaction."
+  },
+  {
+    id: "sample-69",
+    reference: { book: "Luke", chapter: 15, verse: "10" },
+    text: "Likewise, I say to you, there is joy in the presence of the angels of God over one sinner who repents.",
+    imageHintUrl: null,
+    textHint: "Jesus reveals that heaven celebrates with joy whenever a sinner turns to God."
+  },
+  {
+    id: "sample-70",
+    reference: { book: "Proverbs", chapter: 21, verse: "23" },
+    text: "Whoever guards his mouth and tongue keeps his soul from troubles.",
+    imageHintUrl: null,
+    textHint: "Solomon teaches that disciplined speech protects a person from many problems."
+  },
+  {
+    id: "sample-71",
+    reference: { book: "John", chapter: 8, verse: "12" },
+    text: "Then Jesus spoke to them again, saying, \"I am the light of the world. He who follows Me shall not walk in darkness, but have the light of life.\"",
+    imageHintUrl: null,
+    textHint: "Jesus declares Himself as the spiritual light that guides believers out of darkness."
   }
 ];
