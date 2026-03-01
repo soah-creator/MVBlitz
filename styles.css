@@ -1106,12 +1106,12 @@ header .tagline {
   font-weight: 700;
   color: var(--primary-dark);
   margin-bottom: 6px;
-  font-size: 1.05rem;
+  font-size: 1rem;
 }
 
 .verse-item-preview {
   color: var(--text-light);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1382,6 +1382,12 @@ header .tagline {
     flex-direction: column;
     align-items: flex-start;
     padding: 16px;
+  }
+
+  .verse-item-preview {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
   }
 
   .verse-item-actions {
