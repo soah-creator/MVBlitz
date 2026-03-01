@@ -496,5 +496,208 @@ const SAMPLE_VERSES = [
     text: "Then Jesus spoke to them again, saying, \"I am the light of the world. He who follows Me shall not walk in darkness, but have the light of life.\"",
     imageHintUrl: null,
     textHint: "Jesus declares Himself as the spiritual light that guides believers out of darkness."
+  },
+  {
+    id: "sample-72",
+    reference: { book: "Genesis", chapter: 1, verse: "1" },
+    text: "In the beginning God created the heavens and the earth.",
+    imageHintUrl: null,
+    textHint: "The opening words of Scripture declare God as the creator of everything."
+  },
+  {
+    id: "sample-73",
+    reference: { book: "Psalm", chapter: 19, verse: "14" },
+    text: "Let the words of my mouth and the meditation of my heart be acceptable in Your sight, O Lord, my strength and my Redeemer.",
+    imageHintUrl: null,
+    textHint: "David prays that both his speech and inner thoughts would please God."
+  },
+  {
+    id: "sample-74",
+    reference: { book: "Proverbs", chapter: 22, verse: "6" },
+    text: "Train up a child in the way he should go, and when he is old he will not depart from it.",
+    imageHintUrl: null,
+    textHint: "Solomon teaches that godly parenting leaves a lasting impression on children."
+  },
+  {
+    id: "sample-75",
+    reference: { book: "Isaiah", chapter: 26, verse: "3" },
+    text: "You will keep him in perfect peace, whose mind is stayed on You, because he trusts in You.",
+    imageHintUrl: null,
+    textHint: "Isaiah promises that trusting focus on God produces unshakable inner peace."
+  },
+  {
+    id: "sample-76",
+    reference: { book: "Isaiah", chapter: 55, verse: "11" },
+    text: "So shall My word be that goes forth from My mouth; it shall not return to Me void, but it shall accomplish what I please, and it shall prosper in the thing for which I sent it.",
+    imageHintUrl: null,
+    textHint: "God declares that His spoken word always accomplishes its intended purpose."
+  },
+  {
+    id: "sample-77",
+    reference: { book: "Nahum", chapter: 1, verse: "7" },
+    text: "The Lord is good, a stronghold in the day of trouble; and He knows those who trust in Him.",
+    imageHintUrl: null,
+    textHint: "The prophet describes God as a protective fortress for those who rely on Him."
+  },
+  {
+    id: "sample-78",
+    reference: { book: "Matthew", chapter: 6, verse: "34" },
+    text: "Therefore do not worry about tomorrow, for tomorrow will worry about its own things. Sufficient for the day is its own trouble.",
+    imageHintUrl: null,
+    textHint: "Jesus instructs His followers to live one day at a time and not be anxious about the future."
+  },
+  {
+    id: "sample-79",
+    reference: { book: "Matthew", chapter: 22, verse: "37-39" },
+    text: "Jesus said to him, \"'You shall love the Lord your God with all your heart, with all your soul, and with all your mind.' This is the first and great commandment. And the second is like it: 'You shall love your neighbor as yourself.'\"",
+    imageHintUrl: null,
+    textHint: "Jesus summarizes the entire law into two commands: love God completely and love others as yourself."
+  },
+  {
+    id: "sample-80",
+    reference: { book: "Mark", chapter: 10, verse: "27" },
+    text: "But Jesus looked at them and said, \"With men it is impossible, but not with God; for with God all things are possible.\"",
+    imageHintUrl: null,
+    textHint: "Jesus assures that what seems humanly impossible becomes possible through God's power."
+  },
+  {
+    id: "sample-81",
+    reference: { book: "John", chapter: 13, verse: "34-35" },
+    text: "A new commandment I give to you, that you love one another; as I have loved you, that you also love one another. By this all will know that you are My disciples, if you have love for one another.",
+    imageHintUrl: null,
+    textHint: "Jesus gives a new command that selfless love for each other is the mark of true discipleship."
+  },
+  {
+    id: "sample-82",
+    reference: { book: "John", chapter: 16, verse: "33" },
+    text: "These things I have spoken to you, that in Me you may have peace. In the world you will have tribulation; but be of good cheer, I have overcome the world.",
+    imageHintUrl: null,
+    textHint: "Jesus warns of worldly trouble but encourages believers with His victory over it all."
+  },
+  {
+    id: "sample-83",
+    reference: { book: "Romans", chapter: 8, verse: "1" },
+    text: "There is therefore now no condemnation to those who are in Christ Jesus, who do not walk according to the flesh, but according to the Spirit.",
+    imageHintUrl: null,
+    textHint: "Paul declares that believers in Christ are completely free from guilt and condemnation."
+  },
+  {
+    id: "sample-84",
+    reference: { book: "Romans", chapter: 8, verse: "31" },
+    text: "What then shall we say to these things? If God is for us, who can be against us?",
+    imageHintUrl: null,
+    textHint: "Paul asks a rhetorical question affirming that God's support makes believers undefeatable."
+  },
+  {
+    id: "sample-85",
+    reference: { book: "Romans", chapter: 8, verse: "38-39" },
+    text: "For I am persuaded that neither death nor life, nor angels nor principalities nor powers, nor things present nor things to come, nor height nor depth, nor any other created thing, shall be able to separate us from the love of God which is in Christ Jesus our Lord.",
+    imageHintUrl: null,
+    textHint: "Paul lists every imaginable force and declares that nothing can break God's love for His people."
+  },
+  {
+    id: "sample-86",
+    reference: { book: "1 Corinthians", chapter: 15, verse: "58" },
+    text: "Therefore, my beloved brethren, be steadfast, immovable, always abounding in the work of the Lord, knowing that your labor is not in vain in the Lord.",
+    imageHintUrl: null,
+    textHint: "Paul encourages believers to stand firm because their service to God is never wasted."
+  },
+  {
+    id: "sample-87",
+    reference: { book: "2 Corinthians", chapter: 12, verse: "9" },
+    text: "And He said to me, \"My grace is sufficient for you, for My strength is made perfect in weakness.\" Therefore most gladly I will rather boast in my infirmities, that the power of Christ may rest upon me.",
+    imageHintUrl: null,
+    textHint: "God tells Paul that divine power shows up best when human strength runs out."
+  },
+  {
+    id: "sample-88",
+    reference: { book: "Galatians", chapter: 6, verse: "9" },
+    text: "And let us not grow weary while doing good, for in due season we shall reap if we do not lose heart.",
+    imageHintUrl: null,
+    textHint: "Paul urges persistence in doing good, promising a harvest for those who don't give up."
+  },
+  {
+    id: "sample-89",
+    reference: { book: "Ephesians", chapter: 6, verse: "10-11" },
+    text: "Finally, my brethren, be strong in the Lord and in the power of His might. Put on the whole armor of God, that you may be able to stand against the wiles of the devil.",
+    imageHintUrl: null,
+    textHint: "Paul instructs believers to equip themselves with God's spiritual armor for spiritual warfare."
+  },
+  {
+    id: "sample-90",
+    reference: { book: "Philippians", chapter: 1, verse: "6" },
+    text: "Being confident of this very thing, that He who has begun a good work in you will complete it until the day of Jesus Christ.",
+    imageHintUrl: null,
+    textHint: "Paul expresses confidence that God finishes what He starts in every believer's life."
+  },
+  {
+    id: "sample-91",
+    reference: { book: "Philippians", chapter: 2, verse: "3-4" },
+    text: "Let nothing be done through selfish ambition or conceit, but in lowliness of mind let each esteem others better than himself. Let each of you look out not only for his own interests, but also for the interests of others.",
+    imageHintUrl: null,
+    textHint: "Paul calls believers to humility by putting others' needs and interests above their own."
+  },
+  {
+    id: "sample-92",
+    reference: { book: "Philippians", chapter: 3, verse: "14" },
+    text: "I press toward the goal for the prize of the upward call of God in Christ Jesus.",
+    imageHintUrl: null,
+    textHint: "Paul compares the Christian life to a race, pressing forward toward heaven's reward."
+  },
+  {
+    id: "sample-93",
+    reference: { book: "Colossians", chapter: 3, verse: "2" },
+    text: "Set your mind on things above, not on things on the earth.",
+    imageHintUrl: null,
+    textHint: "Paul instructs believers to focus their thoughts on heavenly priorities rather than earthly ones."
+  },
+  {
+    id: "sample-94",
+    reference: { book: "1 Thessalonians", chapter: 5, verse: "16-18" },
+    text: "Rejoice always, pray without ceasing, in everything give thanks; for this is the will of God in Christ Jesus for you.",
+    imageHintUrl: null,
+    textHint: "Paul gives three concise commands that capture God's will: joy, prayer, and gratitude."
+  },
+  {
+    id: "sample-95",
+    reference: { book: "Hebrews", chapter: 4, verse: "12" },
+    text: "For the word of God is living and powerful, and sharper than any two-edged sword, piercing even to the division of soul and spirit, and of joints and marrow, and is a discerner of the thoughts and intents of the heart.",
+    imageHintUrl: null,
+    textHint: "The author describes Scripture as a living, penetrating force that exposes inner motives."
+  },
+  {
+    id: "sample-96",
+    reference: { book: "Hebrews", chapter: 13, verse: "8" },
+    text: "Jesus Christ is the same yesterday, today, and forever.",
+    imageHintUrl: null,
+    textHint: "A declaration that Jesus is unchanging and consistent across all time."
+  },
+  {
+    id: "sample-97",
+    reference: { book: "James", chapter: 4, verse: "7" },
+    text: "Therefore submit to God. Resist the devil and he will flee from you.",
+    imageHintUrl: null,
+    textHint: "James teaches that surrendering to God and standing against evil causes the enemy to retreat."
+  },
+  {
+    id: "sample-98",
+    reference: { book: "1 Peter", chapter: 3, verse: "15" },
+    text: "But sanctify the Lord God in your hearts, and always be ready to give a defense to everyone who asks you a reason for the hope that is in you, with meekness and fear.",
+    imageHintUrl: null,
+    textHint: "Peter calls believers to be prepared to explain their faith with gentleness and respect."
+  },
+  {
+    id: "sample-99",
+    reference: { book: "2 Chronicles", chapter: 7, verse: "14" },
+    text: "If My people who are called by My name will humble themselves, and pray and seek My face, and turn from their wicked ways, then I will hear from heaven, and will forgive their sin and heal their land.",
+    imageHintUrl: null,
+    textHint: "God promises national restoration when His people humbly repent and seek Him."
+  },
+  {
+    id: "sample-100",
+    reference: { book: "Psalm", chapter: 23, verse: "4" },
+    text: "Yea, though I walk through the valley of the shadow of death, I will fear no evil; for You are with me; Your rod and Your staff, they comfort me.",
+    imageHintUrl: null,
+    textHint: "David finds courage in God's presence even in life's darkest and most dangerous moments."
   }
 ];
