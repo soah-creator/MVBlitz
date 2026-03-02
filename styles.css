@@ -119,7 +119,15 @@
 }
 
 [data-theme="dark"] header {
-  background: linear-gradient(135deg, var(--primary-light) 0%, #0c4a6e 50%, var(--primary-light) 100%);
+  background: linear-gradient(135deg, #155e75 0%, #164e63 50%, #155e75 100%);
+}
+
+[data-theme="dark"] header h1 {
+  color: #e0f2fe;
+}
+
+[data-theme="dark"] header .tagline {
+  color: #bae6fd;
 }
 
 [data-theme="dark"] .verse-text-display {

@@ -395,7 +395,7 @@ function setupEventListeners() {
   document.getElementById('quiz-setup-back-btn').addEventListener('click', () => showView('home'));
   document.getElementById('quiz-start-btn').addEventListener('click', startQuizFromSetup);
   document.getElementById('quiz-verse-count').addEventListener('input', onVerseCountSliderChange);
-  document.querySelectorAll('.btn-count-preset').forEach(btn => {
+  document.querySelectorAll('.quiz-verse-count-picker .btn-count-preset').forEach(btn => {
     btn.addEventListener('click', onCountPresetClick);
   });
   document.querySelectorAll('.btn-player-preset').forEach(btn => {
@@ -697,7 +697,7 @@ async function openQuizSetup(mode) {
   updateVerseCountDisplay(defaultCount, total);
 
   // Update preset buttons
-  document.querySelectorAll('.btn-count-preset').forEach(btn => {
+  document.querySelectorAll('.quiz-verse-count-picker .btn-count-preset').forEach(btn => {
     const val = btn.dataset.count;
     if (val === 'all') {
       btn.classList.toggle('disabled-preset', false);
@@ -731,7 +731,7 @@ function onCountPresetClick(e) {
   updateVerseCountDisplay(count, maxVal);
 
   // Update active state
-  document.querySelectorAll('.btn-count-preset').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.quiz-verse-count-picker .btn-count-preset').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
@@ -743,7 +743,7 @@ function onVerseCountSliderChange() {
   updateVerseCountDisplay(count, maxVal);
 
   // Update preset active state to match slider
-  document.querySelectorAll('.btn-count-preset').forEach(btn => {
+  document.querySelectorAll('.quiz-verse-count-picker .btn-count-preset').forEach(btn => {
     const val = btn.dataset.count;
     btn.classList.toggle('active',
       (val === 'all' && count === maxVal) ||
@@ -846,7 +846,7 @@ function updateVerseCountConstraints() {
   updateVerseCountDisplay(quizSetupState.selectedCount, parseInt(slider.max));
 
   // Update preset buttons
-  document.querySelectorAll('.btn-count-preset').forEach(btn => {
+  document.querySelectorAll('.quiz-verse-count-picker .btn-count-preset').forEach(btn => {
     const val = btn.dataset.count;
     if (val === 'all') {
       btn.classList.toggle('disabled-preset', false);
