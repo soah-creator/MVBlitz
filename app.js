@@ -339,17 +339,18 @@ function hideAuthError() {
 
 // Initialize the app
 async function init() {
-  // Initialize with sample verses if empty
-  await initializeWithSamples();
-
-  // Populate book dropdown
-  populateBookDropdown();
-
-  // Set up event listeners (only once)
+  // Set up event listeners first (only once) so buttons always work
+  // even if Firestore calls below fail
   if (!init._listenersSet) {
     setupEventListeners();
     init._listenersSet = true;
   }
+
+  // Populate book dropdown
+  populateBookDropdown();
+
+  // Initialize with sample verses if empty
+  await initializeWithSamples();
 
   // Update verse count on home
   await updateVerseCount();
